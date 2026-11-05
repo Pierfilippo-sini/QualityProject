@@ -1,0 +1,9 @@
+{
+  "http_status": 500,
+  "latenza_s": 0.415,
+  "tentativi": 1,
+  "errore": "HTTP 500: {\"error\":\"402 API error occurred: {\\\"httpMeta\\\":{\\\"response\\\":{},\\\"request\\\":{}}}\",\"debug_trace\":{\"guardrail_passed\":false,\"requested_count\":5,\"api_status\":{\"gemini\":\"error\",\"google_maps\":\"connected\"},\"considered_companies\":[],\"discarded_companies\":[],\"subagent_steps\":[{\"step_number\":0,\"agent_name\":",
+  "json_valido": false,
+  "payload": null,
+  "timestamp": "2026-11-04T23:59:47.033150+00:00"
+}
