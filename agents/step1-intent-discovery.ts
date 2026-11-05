@@ -6,6 +6,7 @@ import {
 import {
   computeDiscoveryPoolTarget,
   deduplicateAndMergeCandidates,
+  isCompanyExcluded,
   normalizeCompanyBrandKey,
   verifyStrictGeographyConstraint,
   type PreliminaryCandidateSeed,
@@ -74,6 +75,8 @@ interface RawStep1LLMResponse {
   macroArea: string | null;
   regioni: string[];
   province: string[];
+  cittaTarget: string[];
+  excludedCompanies: string[];
   specificCompanyNames: string[];
   requestedCompaniesCount: number | null;
   suggestedTriggerWeight: number;
@@ -171,6 +174,18 @@ const STEP1_SCHEMA: Record<string, unknown> = {
       description:
         "Città o province specifiche richieste dall'utente (es. ['Torino']). Lascia [] se l'utente chiede un'intera regione o macro-area.",
     },
+    cittaTarget: {
+      type: "array",
+      items: { type: "string" },
+      description:
+        "Tutte le città o comuni target esplicitamente menzionati dall'utente (es. ['Olbia', 'Sassari', 'Milano']), inclusi i comuni non capoluogo di provincia. Lascia [] se l'utente non specifica città o richiede solo una regione o macro-area.",
+    },
+    excludedCompanies: {
+      type: "array",
+      items: { type: "string" },
+      description:
+        "Aziende o brand che l'utente ha esplicitamente richiesto di escludere dalla ricerca (es. 'escludi Enel ed Eni', 'senza A2A', 'tranne Edison' -> ['Enel', 'Eni', 'A2A', 'Edison']). Lascia [] se non ci sono esclusioni richieste.",
+    },
     specificCompanyNames: {
       type: "array",
       items: { type: "string" },
@@ -255,6 +270,8 @@ const STEP1_SCHEMA: Record<string, unknown> = {
     "macroArea",
     "regioni",
     "province",
+    "cittaTarget",
+    "excludedCompanies",
     "specificCompanyNames",
     "requestedCompaniesCount",
     "suggestedTriggerWeight",
@@ -284,7 +301,7 @@ export async function runStep1IntentDiscovery(
   const systemInstruction = `Sei il Subagente Unificato Step 0+1 (Guardrail B2B, Validazione 3 Parametri Obbligatori & Discovery SERP) alimentato da gemini-3.8-flash.
 In un'UNICA chiamata analizzi il prompt e i campi dell'utente e, SOLO SE la richiesta è valida e completa, invochi il tool di Google Search Grounding per estrarre le aziende target.
 
-Rispetta queste 6 REGOLE TASSATIVE:
+Rispetta queste 7 REGOLE TASSATIVE:
 1. GUARDRAIL PERTINENZA B2B (\`isB2BScoutingRequest\`):
    - \`true\` SOLO se l'utente cerca o analizza aziende, fornitori, utility, imprese o lead commerciali.
    - \`false\` per domande fuori tema (es. "Chi è il presidente degli Stati Uniti?", politica, meteo, sport, ricette, cultura generale): in questo caso NON invocare Google Search, restituisci \`candidates: []\` e compila \`politeReplyIfBlocked\`.
@@ -292,23 +309,27 @@ Rispetta queste 6 REGOLE TASSATIVE:
 2. ESTRAZIONE E VALIDAZIONE DEI 3 PARAMETRI OBBLIGATORI (DA CAMPI FORM O DA PROMPT CHAT, tollerando refusi come "famialie", "Nora Italia" -> "Nord Italia", "arandi volumi"):
    Verifica che nell'input complessivo siano presenti TUTTI E 3 questi parametri:
    - Categoria / Settore Azienda (\`hasCategoriaSettore\` + \`settore\`).
-   - Area Geografica (\`hasAreaGeografica\` + \`macroArea\`/\`regioni\`/\`province\`).
+   - Area Geografica (\`hasAreaGeografica\` + \`macroArea\`/\`regioni\`/\`province\`/\`cittaTarget\`).
    - Dimensione Aziendale (\`hasDimensioneAziendale\` + \`dimensioneAziendale\`): accetta sia fasce numeriche di dipendenti, sia soglie di clienti o fatturato (es. "almeno 500.000 clienti", "20M-80M€"), sia categorie dimensionali/mercato come PMI, Mid-Cap, Grandi Imprese, Aziende Quotate, Startup.
    SE MANCA ANCHE SOLO UNO DI QUESTI 3 PARAMETRI: imposta il relativo flag \`has...\` a \`false\`, NON invocare Google Search, restituisci \`candidates: []\` e spiega in \`politeReplyIfBlocked\` quali parametri mancano.
 
 3. AZIENDE SPECIFICHE NOMINATE DALL'UTENTE (\`specificCompanyNames\`):
    - Se l'utente nomina specifiche aziende da valutare, inseriscile in \`specificCompanyNames\` e cerca ESCLUSIVAMENTE quelle singole aziende e NON DI PIÙ.
 
-4. RICONOSCIMENTO ALIAS E DISTINZIONE CONTROLLANTE VS CONTROLLATA:
+4. VINCOLO NEGATIVO ED ESCLUSIONE AZIENDE (\`excludedCompanies\`):
+   - Se l'utente richiede esplicitamente di escludere determinate aziende (es. "escludi Enel ed Eni", "senza A2A", "tranne Sorgenia", "escludendo Tim"), estrai tutti i relativi nomi o brand nell'array \`excludedCompanies\`.
+   - È SEVERAMENTE VIETATO cercare, interrogare o restituire tra i candidati (\`candidates\`) aziende presenti in \`excludedCompanies\` o qualsiasi loro filiale/controllata/variante operativa.
+
+5. RICONOSCIMENTO ALIAS E DISTINZIONE CONTROLLANTE VS CONTROLLATA:
    - Unisci solo le varianti formali della STESSA persona giuridica (es. con o senza S.p.A. / S.r.l.).
    - Se un gruppo ha una Holding capogruppo (es. "Edison S.p.A.", "Iren S.p.A.", "A2A S.p.A.") e una Controllata operativa specifica per il business cercato dall'utente (es. "Edison Energia S.p.A.", "Iren Mercato S.p.A.", "A2A Energia S.p.A." per la vendita luce e gas), seleziona la società che opera effettivamente nel business richiesto (o mantienile distinte se entrambe pertinenti), SENZA MAI confondere o scambiare l'URL di bilancio (\`financialUrl\`) della capogruppo con quello della controllata.
 
-5. SOVRA-CAMPIONAMENTO (N + 4 CANDIDATI GREZZI) PER RICERCHE GENERICHE (Default = ${defaultCount}, Cap Massimo = ${maxCap}):
+6. SOVRA-CAMPIONAMENTO (N + 4 CANDIDATI GREZZI) PER RICERCHE GENERICHE (Default = ${defaultCount}, Cap Massimo = ${maxCap}):
    - Se tutti e 3 i parametri obbligatori sono presenti e l'utente chiede X aziende (default X = ${defaultCount}), il pool target N è \`min(${maxCap}, 2 * X)\` (es. N = 10 quando X = 5).
    - Individua tramite Google Search un buffer leggermente superiore di candidati grezzi pari a **N + 4 candidati** (es. 14 candidati grezzi quando ne servono N = 10), così da avere ricambi pronti dopo la deduplicazione e aggregazione preventiva.
 
-6. VINCOLO GEOGRAFICO RIGIDO, REPERIBILITÀ BILANCIO E CHIUSURA FRASI:
-   - Se l'utente specifica una città o provincia (es. "Torino"), inseriscila in \`province\` e cerca ESCLUSIVAMENTE aziende con sede in quella città/provincia.
+7. VINCOLO GEOGRAFICO, CITTÀ TARGET E REPERIBILITÀ BILANCIO:
+   - Se l'utente specifica città o comuni target (es. "Olbia", "Torino", "Sassari", "Gallarate", "Scandicci"), inserisci SEMPRE tutte le città/comuni menzionati in \`cittaTarget\` (anche e specialmente se non sono capoluoghi di provincia) e inseriscili anche in \`keywords\` e in \`province\` se pertinenti. Cerca aziende con sede in tali città o aree target.
    - Se durante la discovery identifichi la scheda su portali camerali (\`fatturatoitalia.it\`, \`reportaziende.it\`, \`ufficiocamerale.it\`), popola \`financialUrl\`.
    - Ogni campo testuale deve essere costituito da frasi complete, sintetiche e ben concluse che terminano sempre con un punto fermo (.). È severamente vietato troncare le frasi o usare i punti di sospensione (...).`;
 
@@ -366,6 +387,16 @@ Rispetta queste 6 REGOLE TASSATIVE:
   const resolvedProvince = Array.isArray(res.data.province)
     ? res.data.province.filter(Boolean)
     : [];
+  const resolvedCittaTarget = Array.isArray(res.data.cittaTarget)
+    ? res.data.cittaTarget
+        .map((c) => c?.trim())
+        .filter((c): c is string => Boolean(c && c.length > 0))
+    : [];
+  const resolvedExcludedCompanies = Array.isArray(res.data.excludedCompanies)
+    ? res.data.excludedCompanies
+        .map((e) => e?.trim())
+        .filter((e): e is string => Boolean(e && e.length > 0))
+    : [];
 
   const validSettore =
     Boolean(res.data.hasCategoriaSettore && isNonEmptyParam(resolvedSettore)) ||
@@ -376,7 +407,8 @@ Rispetta queste 6 REGOLE TASSATIVE:
       res.data.hasAreaGeografica &&
         (isNonEmptyParam(resolvedMacroArea) ||
           resolvedRegioni.length > 0 ||
-          resolvedProvince.length > 0)
+          resolvedProvince.length > 0 ||
+          resolvedCittaTarget.length > 0)
     ) || isNonEmptyParam(mp?.areaGeografica);
 
   const validDimensione =
@@ -452,6 +484,8 @@ Rispetta queste 6 REGOLE TASSATIVE:
     macroArea: resolvedMacroArea,
     regioni: resolvedRegioni,
     province: resolvedProvince,
+    cittaTarget: resolvedCittaTarget,
+    excludedCompanies: resolvedExcludedCompanies,
     specificCompanyNames,
     missingMandatoryParams,
     requestedCount: effectiveRequestedCount,
@@ -504,6 +538,11 @@ Rispetta queste 6 REGOLE TASSATIVE:
     const name = raw?.ragioneSociale?.trim();
     if (!name) continue;
 
+    // Vincolo negativo: salta completamente qualsiasi azienda esclusa esplicitamente dall'utente
+    if (isCompanyExcluded(name, resolvedExcludedCompanies)) {
+      continue;
+    }
+
     const brandKey = normalizeCompanyBrandKey(name);
     if (!brandKey) continue;
 
@@ -530,6 +569,7 @@ Rispetta queste 6 REGOLE TASSATIVE:
         ragioneSociale: name,
         sedeCitta: cityHint,
         sedeRegione: regionHint,
+        sedeCittaHint: cityHint,
         constraints,
       });
       if (!geoCheck.passes) {

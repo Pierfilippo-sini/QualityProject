@@ -235,6 +235,8 @@ export interface ParsedSearchConstraints {
   macroArea: string | null;
   regioni: string[];
   province?: string[];
+  cittaTarget?: string[];
+  excludedCompanies?: string[];
   specificCompanyNames?: string[];
   missingMandatoryParams?: string[];
   requestedCount: number;

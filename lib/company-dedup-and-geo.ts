@@ -127,6 +127,70 @@ export function normalizeCompanyBrandKey(ragioneSociale: string): string {
 }
 
 /**
+ * Verifica se un'azienda corrisponde a uno dei nomi presenti nella lista di esclusione (`excludedCompanies`).
+ * Supporta confronto per brand canonico normalizzato, sottostringa su nome normalizzato e corrispondenza alfanumerica.
+ */
+export function isCompanyExcluded(
+  companyName: string | null | undefined,
+  excludedCompanies?: string[] | null
+): boolean {
+  if (!companyName || !excludedCompanies || excludedCompanies.length === 0) {
+    return false;
+  }
+
+  const cleanName = companyName.trim();
+  if (!cleanName) return false;
+
+  const compBrand = normalizeCompanyBrandKey(cleanName);
+  const compLower = cleanName.toLowerCase();
+  const strip = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const compStripped = strip(cleanName);
+
+  for (const rawExc of excludedCompanies) {
+    const excClean = rawExc?.trim();
+    if (!excClean) continue;
+
+    const excBrand = normalizeCompanyBrandKey(excClean);
+    const excLower = excClean.toLowerCase();
+    const excStripped = strip(excClean);
+
+    // 1. Corrispondenza esatta su brand canonico
+    if (compBrand && excBrand && compBrand === excBrand) {
+      return true;
+    }
+
+    // 2. Corrispondenza per sottostringa tra brand canonici (es. "enel" in "enel energia")
+    if (
+      compBrand &&
+      excBrand &&
+      (compBrand.includes(excBrand) || excBrand.includes(compBrand))
+    ) {
+      return true;
+    }
+
+    // 3. Corrispondenza diretta su stringa lowercase
+    if (compLower.includes(excLower) || excLower.includes(compLower)) {
+      return true;
+    }
+
+    // 4. Corrispondenza su stringa alfanumerica ripulita (es. "E.ON" vs "Eon")
+    if (compStripped.length >= 2 && excStripped.length >= 2) {
+      if (compStripped === excStripped) {
+        return true;
+      }
+      if (
+        excStripped.length >= 3 &&
+        (compStripped.includes(excStripped) || excStripped.includes(compStripped))
+      ) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+/**
  * Estrae il dominio web ufficiale dell'azienda (escludendo portali bilanci, social e news).
  */
 export function extractCorporateDomainKey(
@@ -448,12 +512,20 @@ const ITALIAN_PROVINCE_INFO: Record<
   palermo: { code: "PA", region: "sicilia", aliases: ["palermo"] },
   catania: { code: "CT", region: "sicilia", aliases: ["catania"] },
   cagliari: { code: "CA", region: "sardegna", aliases: ["cagliari"] },
+  sassari: { code: "SS", region: "sardegna", aliases: ["sassari"] },
+  olbia: {
+    code: "SS",
+    region: "sardegna",
+    aliases: ["olbia", "olbia-tempio", "tempio pausania", "tempio", "ot"],
+  },
+  nuoro: { code: "NU", region: "sardegna", aliases: ["nuoro"] },
+  oristano: { code: "OR", region: "sardegna", aliases: ["oristano"] },
   perugia: { code: "PG", region: "umbria", aliases: ["perugia"] },
   ancona: { code: "AN", region: "marche", aliases: ["ancona"] },
   pescara: { code: "PE", region: "abruzzo", aliases: ["pescara"] },
 };
 
-function cleanGeoToken(s: string | null | undefined): string {
+export function cleanGeoToken(s: string | null | undefined): string {
   if (!s) return "";
   return s
     .toLowerCase()
@@ -463,11 +535,45 @@ function cleanGeoToken(s: string | null | undefined): string {
 }
 
 /**
- * Verifica in modo deterministico se la sede dell'azienda rispetta rigorosamente
- * il vincolo geografico richiesto dall'utente (Città/Provincia specifica oppure Regione).
+ * Confronta in modo flessibile ma controllato due token geografici (es. città e vincolo target/keyword/provincia).
+ * Riconosce corrispondenza esatta, confini di parola e inclusioni controllate per evitare falsi positivi.
+ */
+export function matchesGeoToken(city: string, target: string): boolean {
+  const c = cleanGeoToken(city);
+  const t = cleanGeoToken(target);
+  if (!c || !t) return false;
+  if (c === t) return true;
+
+  // Corrispondenza con confini di parola (evita che "re" corrisponda a "reti" o "pi" a "pisa")
+  const escapedC = c.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const escapedT = t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+  const regexC = new RegExp(`(^|\\s|[,./\\-_])${escapedC}($|\\s|[,./\\-_])`, "i");
+  const regexT = new RegExp(`(^|\\s|[,./\\-_])${escapedT}($|\\s|[,./\\-_])`, "i");
+
+  if (regexC.test(t) || regexT.test(c)) return true;
+
+  // Se entrambi i termini hanno lunghezza sufficiente (>= 4 caratteri), ammette l'inclusione di stringa
+  if (c.length >= 4 && t.length >= 4 && (c.includes(t) || t.includes(c))) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Verifica in modo deterministico se la sede dell'azienda rispetta il vincolo geografico richiesto.
  *
- * Esempio: se l'utente chiede "Torino", un'azienda ad "Alessandria", "Cuneo" o "Milano"
- * viene scartata senza eccezioni.
+ * SOFTENING GEOGRAFICO:
+ * Un'azienda supera sempre la validazione geografica se il suo `sedeCittaHint` (o `sedeCitta`)
+ * coincide con o è contenuto in:
+ * - `constraints.province`
+ * - `constraints.areaGeograficaRaw`
+ * - `constraints.cittaTarget`
+ * - `constraints.keywords`
+ *
+ * Se non soddisfa il match diretto ammorbidito, vengono applicati i vincoli di esclusione
+ * per provincia specifica / città target / regione richiesta.
  */
 export function verifyStrictGeographyConstraint(params: {
   ragioneSociale: string;
@@ -475,6 +581,7 @@ export function verifyStrictGeographyConstraint(params: {
   sedeRegione: string;
   indirizzoVerificatoMaps?: string | "N.D." | null;
   constraints: ParsedSearchConstraints;
+  sedeCittaHint?: string | null;
 }): { passes: boolean; reason?: string } {
   const {
     ragioneSociale,
@@ -482,6 +589,7 @@ export function verifyStrictGeographyConstraint(params: {
     sedeRegione,
     indirizzoVerificatoMaps,
     constraints,
+    sedeCittaHint,
   } = params;
 
   // Se l'utente ha chiesto specificamente una determinata azienda per nome (es. "Valuta Bending Spoons e Vodafone Italia"),
@@ -503,7 +611,46 @@ export function verifyStrictGeographyConstraint(params: {
     }
   }
 
-  const requestedProvinces = (constraints.province ?? [])
+  const candidateCity = (sedeCittaHint || sedeCitta || "").trim();
+  const cityHintNorm = cleanGeoToken(candidateCity);
+
+  // =========================================================================
+  // SOFTENING GEOGRAFICO IMMEDIATO:
+  // Se `sedeCittaHint` (o `sedeCitta`) matcha province, areaGeograficaRaw,
+  // cittaTarget o keywords, la validazione geografica viene superata immediatamente.
+  // =========================================================================
+  if (cityHintNorm && cityHintNorm !== "n.d." && cityHintNorm !== "nd") {
+    const matchesProvince = (constraints.province ?? []).some((prov) =>
+      matchesGeoToken(cityHintNorm, prov)
+    );
+
+    const matchesAreaGeograficaRaw = Boolean(
+      constraints.areaGeograficaRaw &&
+        matchesGeoToken(cityHintNorm, constraints.areaGeograficaRaw)
+    );
+
+    const matchesCittaTarget = (constraints.cittaTarget ?? []).some((targetCity) =>
+      matchesGeoToken(cityHintNorm, targetCity)
+    );
+
+    const matchesKeywords = (constraints.keywords ?? []).some((kw) =>
+      matchesGeoToken(cityHintNorm, kw)
+    );
+
+    if (
+      matchesProvince ||
+      matchesAreaGeograficaRaw ||
+      matchesCittaTarget ||
+      matchesKeywords
+    ) {
+      return { passes: true };
+    }
+  }
+
+  const requestedTargets = [
+    ...(constraints.cittaTarget ?? []),
+    ...(constraints.province ?? []),
+  ]
     .map(cleanGeoToken)
     .filter(Boolean);
   const requestedRegions = (constraints.regioni ?? [])
@@ -518,28 +665,26 @@ export function verifyStrictGeographyConstraint(params: {
       : "";
   const mapsAddrNorm = cleanGeoToken(mapsAddrRaw);
 
-  // 1. Vincolo rigido su Città / Provincia specifica (es. "Torino")
-  if (requestedProvinces.length > 0) {
-    // Controlla se la città dell'azienda è esplicitamente un'altra provincia non richiesta (es. Alessandria o Cuneo quando si chiede Torino)
-    const matchedProvince = requestedProvinces.some((reqProv) => {
+  // 1. Vincolo rigido su Città / Provincia specifica o Città Target
+  if (requestedTargets.length > 0) {
+    const matchedTarget = requestedTargets.some((reqTarget) => {
       const provEntry = Object.values(ITALIAN_PROVINCE_INFO).find(
         (info) =>
-          info.aliases.includes(reqProv) ||
-          info.code.toLowerCase() === reqProv
+          info.aliases.includes(reqTarget) ||
+          info.code.toLowerCase() === reqTarget
       );
 
-      // Controllo 1: il nome della città coincide o contiene la città richiesta
+      // Controllo 1: il nome della città coincide o contiene la città/provincia target
       if (
-        cityNorm === reqProv ||
-        cityNorm.includes(reqProv) ||
-        reqProv.includes(cityNorm)
+        matchesGeoToken(cityNorm, reqTarget) ||
+        matchesGeoToken(cityHintNorm, reqTarget)
       ) {
         return true;
       }
 
       // Controllo 2: se abbiamo l'indirizzo certificato Google Maps, verifica che contenga la città o la sigla provincia (es. "10121 Torino TO" o " TO,")
       if (mapsAddrRaw) {
-        if (mapsAddrNorm.includes(reqProv)) {
+        if (matchesGeoToken(mapsAddrNorm, reqTarget)) {
           return true;
         }
         if (provEntry) {
@@ -553,20 +698,24 @@ export function verifyStrictGeographyConstraint(params: {
       return false;
     });
 
-    if (!matchedProvince) {
+    if (!matchedTarget) {
       return {
         passes: false,
-        reason: `Sede operativa fuori dal vincolo geografico richiesto: trovata a "${sedeCitta}" anziché in "${(constraints.province ?? []).join(", ")}"`,
+        reason: `Sede operativa fuori dal vincolo geografico richiesto: trovata a "${candidateCity || sedeCitta}" anziché in "${[...(constraints.cittaTarget ?? []), ...(constraints.province ?? [])].join(", ")}"`,
       };
     }
   }
 
-  // 2. Vincolo rigido su Regione (quando non è soddisfatto da provincia o quando è richiesta una regione specifica)
-  if (requestedRegions.length > 0 && requestedProvinces.length === 0) {
+  // 2. Vincolo rigido su Regione (quando non sono specificate province o città target specifiche)
+  if (requestedRegions.length > 0 && requestedTargets.length === 0) {
     // Risale anche alla regione a partire dalla città se sedeRegione non è precisa
     let inferredRegion = regionNorm;
     for (const [, info] of Object.entries(ITALIAN_PROVINCE_INFO)) {
-      if (info.aliases.some((alias) => cityNorm.includes(alias))) {
+      if (
+        info.aliases.some(
+          (alias) => cityNorm.includes(alias) || cityHintNorm.includes(alias)
+        )
+      ) {
         inferredRegion = info.region;
         break;
       }
@@ -583,7 +732,7 @@ export function verifyStrictGeographyConstraint(params: {
     if (!matchedRegion && inferredRegion && inferredRegion !== "n.d.") {
       return {
         passes: false,
-        reason: `Sede operativa fuori regione target: "${sedeCitta} (${sedeRegione})" non appartiene a "${constraints.regioni.join(", ")}"`,
+        reason: `Sede operativa fuori regione target: "${candidateCity || sedeCitta} (${sedeRegione})" non appartiene a "${constraints.regioni.join(", ")}"`,
       };
     }
   }

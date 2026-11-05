@@ -2,6 +2,7 @@ import { UNIFIED_GEMINI_MODEL } from "@/lib/agent-config";
 import {
   deduplicateAndMergeCandidates,
   deduplicateCompaniesKeepMostRecent,
+  isCompanyExcluded,
   normalizeCompanyBrandKey,
   normalizePartitaIva,
   verifyStrictGeographyConstraint,
@@ -333,6 +334,22 @@ export async function analyzeSingleCandidateInIsolation(
   systemInstruction = buildStep2SystemInstruction()
 ): Promise<SingleCompanyTaskOutcome> {
   const STAGE_LABEL = "Step 2 — Gatekeeper & Parallel Data Extraction";
+
+  // Controllo preventivo: se l'azienda è nella lista di esclusione, salta immediatamente
+  // senza effettuare alcuna ricerca, scraping o chiamata LLM
+  if (isCompanyExcluded(candidate.ragioneSociale, constraints.excludedCompanies)) {
+    return {
+      candidateName: candidate.ragioneSociale,
+      discardedTrace: {
+        ragioneSociale: candidate.ragioneSociale,
+        stage: STAGE_LABEL,
+        reason: `Azienda esclusa esplicitamente dall'utente (${candidate.ragioneSociale}).`,
+      },
+      searchQueries: [],
+      citations: [],
+      fallbackTriggered: false,
+    };
+  }
   const cleanName = sanitizeTextFields(candidate.ragioneSociale, {
     ensureTerminalPeriod: false,
   });
@@ -564,6 +581,7 @@ export async function analyzeSingleCandidateInIsolation(
     ragioneSociale: resolvedName,
     sedeCitta: resolvedCity,
     sedeRegione: resolvedRegion,
+    sedeCittaHint: candidate.sedeCittaHint || resolvedCity,
     constraints,
   });
 

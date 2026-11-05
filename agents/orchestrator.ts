@@ -7,7 +7,10 @@ import {
   getGoogleMapsApiKey,
   getMaxCompaniesCap,
 } from "@/lib/agent-config";
-import { deduplicateCompaniesKeepMostRecent } from "@/lib/company-dedup-and-geo";
+import {
+  deduplicateCompaniesKeepMostRecent,
+  isCompanyExcluded,
+} from "@/lib/company-dedup-and-geo";
 import { cleanupSessionCaches } from "@/lib/gemini-cache-guard";
 import {
   aggregateStepCallMetrics,
@@ -119,6 +122,15 @@ async function* streamConcurrentStep2AndStep3(
   >();
 
   candidates.forEach((candidateSeed, index) => {
+    if (
+      isCompanyExcluded(
+        candidateSeed.ragioneSociale,
+        constraints.excludedCompanies
+      )
+    ) {
+      return;
+    }
+
     const candidateId = `cmp_${index + 1}`;
 
     const taskPromise = (async (): Promise<{
@@ -341,7 +353,22 @@ export async function executeB2BScoutingPipeline(
 
     callbacks?.onIntent?.(constraints);
 
+    const activeCandidates: CandidateCompanySeed[] = [];
     for (const candidate of candidates) {
+      if (
+        isCompanyExcluded(
+          candidate.ragioneSociale,
+          constraints.excludedCompanies
+        )
+      ) {
+        telemetry.recordDiscardedCompany(
+          candidate.ragioneSociale,
+          "Step 1 — Discovery SERP",
+          `Azienda esclusa dall'utente tramite vincolo negativo (excludedCompanies).`
+        );
+        continue;
+      }
+      activeCandidates.push(candidate);
       telemetry.recordConsideredCompany(
         candidate.ragioneSociale,
         "Step 1 — Discovery SERP",
@@ -352,7 +379,7 @@ export async function executeB2BScoutingPipeline(
     const wTrigger = clampWeight(constraints.suggestedTriggerWeight);
     const wTarget = Number((1.0 - wTrigger).toFixed(4));
 
-    if (candidates.length === 0) {
+    if (activeCandidates.length === 0) {
       return {
         response_type: "ranking",
         text_response:
@@ -373,7 +400,7 @@ export async function executeB2BScoutingPipeline(
     // =========================================================================
     callbacks?.onStage?.(
       "GATEKEEPER",
-      `Step 2+3/6 — Estrazione Bilanci (ReportAziende + FatturatoItalia) e Verifica Google Maps simultanee con streaming in tempo reale su ${candidates.length} candidate...`
+      `Step 2+3/6 — Estrazione Bilanci (ReportAziende + FatturatoItalia) e Verifica Google Maps simultanee con streaming in tempo reale su ${activeCandidates.length} candidate...`
     );
 
     const step2SystemInstruction = buildStep2SystemInstruction();
@@ -421,7 +448,7 @@ export async function executeB2BScoutingPipeline(
     // Generatore asincrono `for await...of`: processa ogni candidata nell'istante stesso
     // in cui i suoi Step 2 e Step 3 paralleli terminano
     for await (const settledPair of streamConcurrentStep2AndStep3(
-      candidates,
+      activeCandidates,
       constraints,
       step2SystemInstruction
     )) {
