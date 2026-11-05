@@ -96,7 +96,7 @@ export const AGENT_MODEL_ASSIGNMENT: Record<
     stepNumber: 2,
     agentName: "Step 2 — Parallel Data Extraction & GICS Clustering",
     tier: "FAST_MODEL",
-    useSearchGrounding: true,
+    useSearchGrounding: false,
     allowFallbackToFast: false,
     resolveModel: () => UNIFIED_GEMINI_MODEL,
   },

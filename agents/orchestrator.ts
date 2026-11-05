@@ -234,6 +234,22 @@ function buildTokenUsageSummary(params: {
     totalTokenCount: aggregated.usageMetadata.totalTokenCount,
     tier: aggregated.tier,
     totalCostUsd: aggregated.totalCostUsd,
+    nominalCostUsd: aggregated.totalCostUsd,
+    inputCostUsd: aggregated.inputCostUsd,
+    outputCostUsd: aggregated.outputCostUsd,
+    cachedCostUsd: aggregated.cachedCostUsd,
+    groundingQueriesCount: aggregated.groundingQueriesCount,
+    groundingCostUsd: aggregated.groundingCostUsd,
+    costBreakdown: {
+      inputTokensCostUsd: aggregated.inputCostUsd,
+      outputTokensCostUsd: aggregated.outputCostUsd,
+      cachedTokensCostUsd: aggregated.cachedCostUsd,
+      tokensTotalCostUsd: aggregated.tokensCostUsd,
+      groundingQueriesCount: aggregated.groundingQueriesCount,
+      groundingCostUsd: aggregated.groundingCostUsd,
+      billedCostUsd: aggregated.totalCostUsd,
+      nominalCostUsd: aggregated.totalCostUsd,
+    },
     apiCallsCount: params.calls.length,
     formattedDebugLine: aggregated.formattedDebugLine,
   };
@@ -710,12 +726,42 @@ export async function executeB2BScoutingPipeline(
     });
 
     const step3Cfg = AGENT_MODEL_ASSIGNMENT.maps_verification;
+    const mapsCallsCount = step3PlacesDetails.length;
+    // Prezzo Google Maps Places API (New) Text Search: $35.00 / 1000 chiamate = $0.035 / chiamata
+    const mapsNominalCostUsd = Number((mapsCallsCount * 0.035).toFixed(6));
+    const step3TokenUsage: StepTokenUsageSummary = {
+      promptTokenCount: 0,
+      candidatesTokenCount: 0,
+      cachedContentTokenCount: 0,
+      totalTokenCount: 0,
+      tier: "Tier 1",
+      totalCostUsd: 0, // Costo effettivo addebitato: $0.00 (coperto al 100% dal credito promozionale di €300 Google Cloud)
+      nominalCostUsd: mapsNominalCostUsd,
+      mapsCallsCount,
+      mapsNominalCostUsd,
+      mapsCreditCoveredUsd: mapsNominalCostUsd,
+      costBreakdown: {
+        inputTokensCostUsd: 0,
+        outputTokensCostUsd: 0,
+        cachedTokensCostUsd: 0,
+        tokensTotalCostUsd: 0,
+        mapsCallsCount,
+        mapsNominalCostUsd,
+        mapsCreditCoveredUsd: mapsNominalCostUsd,
+        billedCostUsd: 0,
+        nominalCostUsd: mapsNominalCostUsd,
+      },
+      apiCallsCount: mapsCallsCount,
+      formattedDebugLine: `[DEBUG Agente - Step 3 (${step3Cfg.agentName})] Places API: ${mapsCallsCount} chiamate | Costo Effettivo: $0.000000 (Coperto da €300 credito gratuito) | Costo Nominale: $${mapsNominalCostUsd.toFixed(6)}`,
+    };
+
     telemetry.recordCustomStep({
       step_number: step3Cfg.stepNumber,
       agent_name: `${step3Cfg.agentName} (Simultaneo a Step 2)`,
       model_used: GOOGLE_MAPS_PLACES_API_ID,
       fallback_triggered: false,
       duration_ms: step3MaxDurationMs,
+      token_usage: step3TokenUsage,
       input_payload: {
         mode: "CONCURRENT_WITH_STEP2_PROMISE_ALL_SETTLED",
         endpoint: "https://places.googleapis.com/v1/places:searchText",

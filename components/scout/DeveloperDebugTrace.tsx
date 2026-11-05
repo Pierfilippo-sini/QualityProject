@@ -145,10 +145,42 @@ export function DeveloperDebugTrace() {
                   <Badge
                     variant="outline"
                     className="border-emerald-300 bg-emerald-50 font-mono text-[11px] text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300"
+                    title="Costo effettivo addebitato (Google Maps escluso perché coperto da 300€ di credito gratuito Google Cloud)"
                   >
-                    Costo Totale: ${debugTrace.total_cost_usd.toFixed(6)}
+                    Costo Effettivo: ${debugTrace.total_cost_usd.toFixed(6)}
                   </Badge>
                 )}
+                {typeof debugTrace.maps_credit_saved_usd === "number" &&
+                  debugTrace.maps_credit_saved_usd > 0 && (
+                    <Badge
+                      variant="outline"
+                      className="border-teal-300 bg-teal-50 font-mono text-[11px] text-teal-800 dark:border-teal-800 dark:bg-teal-950/50 dark:text-teal-300"
+                      title={`Google Maps Places API è coperto al 100% dal credito promozionale di €300 Google Cloud (Valore nominale: $${debugTrace.maps_credit_saved_usd.toFixed(4)})`}
+                    >
+                      Maps: $0.00 (Coperto da €300 Credito • Valore: ${debugTrace.maps_credit_saved_usd.toFixed(4)})
+                    </Badge>
+                  )}
+                {typeof debugTrace.total_grounding_cost_usd === "number" &&
+                  debugTrace.total_grounding_cost_usd > 0 && (
+                    <Badge
+                      variant="outline"
+                      className="border-amber-300 bg-amber-50 font-mono text-[11px] text-amber-800 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300"
+                      title="Costo query Google Search Grounding ($0.035 / query)"
+                    >
+                      Grounding: ${debugTrace.total_grounding_cost_usd.toFixed(4)}
+                    </Badge>
+                  )}
+                {typeof debugTrace.total_nominal_cost_usd === "number" &&
+                  debugTrace.total_nominal_cost_usd >
+                    (debugTrace.total_cost_usd ?? 0) && (
+                    <Badge
+                      variant="outline"
+                      className="font-mono text-[11px] text-muted-foreground"
+                      title="Valore nominale totale teorico comprensivo dei consumi Maps coperti dal credito"
+                    >
+                      Valore Nominale: ${debugTrace.total_nominal_cost_usd.toFixed(6)}
+                    </Badge>
+                  )}
                 {typeof debugTrace.total_input_tokens === "number" &&
                   debugTrace.total_input_tokens > 0 && (
                     <Badge variant="outline" className="font-mono text-[11px]">
@@ -400,22 +432,58 @@ export function DeveloperDebugTrace() {
 
                           {step.token_usage && (
                             <>
-                              <Badge
-                                variant="outline"
-                                className="border-emerald-300 bg-emerald-50 font-mono text-[10px] text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300"
-                              >
-                                ${step.token_usage.totalCostUsd.toFixed(6)}
-                              </Badge>
-                              <Badge
-                                variant="outline"
-                                className="font-mono text-[10px]"
-                              >
-                                In: {step.token_usage.promptTokenCount} ({step.token_usage.tier}) • Out:{" "}
-                                {step.token_usage.candidatesTokenCount}
-                                {step.token_usage.cachedContentTokenCount > 0
-                                  ? ` • Cached: ${step.token_usage.cachedContentTokenCount}`
-                                  : ""}
-                              </Badge>
+                              {step.token_usage.mapsCallsCount !== undefined &&
+                              step.token_usage.mapsCallsCount > 0 ? (
+                                <>
+                                  <Badge
+                                    variant="outline"
+                                    className="border-teal-300 bg-teal-50 font-mono text-[10px] text-teal-800 dark:border-teal-800 dark:bg-teal-950/50 dark:text-teal-300"
+                                  >
+                                    $0.000000 (Credito €300 Gratuito)
+                                  </Badge>
+                                  <Badge
+                                    variant="outline"
+                                    className="font-mono text-[10px] text-muted-foreground"
+                                  >
+                                    Nominale: ${(step.token_usage.nominalCostUsd ?? 0).toFixed(6)}
+                                  </Badge>
+                                  <Badge
+                                    variant="outline"
+                                    className="font-mono text-[10px]"
+                                  >
+                                    Places API: {step.token_usage.mapsCallsCount} chiamate
+                                  </Badge>
+                                </>
+                              ) : (
+                                <>
+                                  <Badge
+                                    variant="outline"
+                                    className="border-emerald-300 bg-emerald-50 font-mono text-[10px] text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300"
+                                  >
+                                    ${step.token_usage.totalCostUsd.toFixed(6)}
+                                  </Badge>
+                                  {step.token_usage.groundingQueriesCount !== undefined &&
+                                    step.token_usage.groundingQueriesCount > 0 && (
+                                      <Badge
+                                        variant="outline"
+                                        className="border-amber-300 bg-amber-50 font-mono text-[10px] text-amber-800 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300"
+                                      >
+                                        Grounding: {step.token_usage.groundingQueriesCount} q ($
+                                        {(step.token_usage.groundingCostUsd ?? 0).toFixed(4)})
+                                      </Badge>
+                                    )}
+                                  <Badge
+                                    variant="outline"
+                                    className="font-mono text-[10px]"
+                                  >
+                                    In: {step.token_usage.promptTokenCount} ({step.token_usage.tier}) • Out:{" "}
+                                    {step.token_usage.candidatesTokenCount}
+                                    {step.token_usage.cachedContentTokenCount > 0
+                                      ? ` • Cached: ${step.token_usage.cachedContentTokenCount}`
+                                      : ""}
+                                  </Badge>
+                                </>
+                              )}
                             </>
                           )}
 
@@ -428,6 +496,52 @@ export function DeveloperDebugTrace() {
                       {step.token_usage?.formattedDebugLine && (
                         <div className="mt-2 rounded border border-border/70 bg-muted/40 px-2.5 py-1.5 font-mono text-[11px] text-foreground">
                           {step.token_usage.formattedDebugLine}
+                        </div>
+                      )}
+
+                      {step.token_usage?.costBreakdown && (
+                        <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] text-muted-foreground">
+                          <span className="font-semibold text-foreground/80">
+                            Costi Step:
+                          </span>
+                          {step.token_usage.costBreakdown.tokensTotalCostUsd > 0 && (
+                            <span className="rounded bg-muted/80 px-1.5 py-0.5">
+                              Tokens: $
+                              {step.token_usage.costBreakdown.tokensTotalCostUsd.toFixed(6)}{" "}
+                              (In: $
+                              {step.token_usage.costBreakdown.inputTokensCostUsd.toFixed(6)}
+                              , Out: $
+                              {step.token_usage.costBreakdown.outputTokensCostUsd.toFixed(6)}
+                              {step.token_usage.costBreakdown.cachedTokensCostUsd > 0
+                                ? `, Cache: $${step.token_usage.costBreakdown.cachedTokensCostUsd.toFixed(6)}`
+                                : ""}
+                              )
+                            </span>
+                          )}
+                          {step.token_usage.costBreakdown.groundingQueriesCount ? (
+                            <span className="rounded border border-amber-300/60 bg-amber-50/80 px-1.5 py-0.5 font-medium text-amber-900 dark:border-amber-800/60 dark:bg-amber-950/40 dark:text-amber-200">
+                              Google Search Grounding:{" "}
+                              {step.token_usage.costBreakdown.groundingQueriesCount}{" "}
+                              query ($
+                              {(
+                                step.token_usage.costBreakdown.groundingCostUsd ??
+                                0
+                              ).toFixed(6)}
+                              )
+                            </span>
+                          ) : null}
+                          {step.token_usage.costBreakdown.mapsCallsCount ? (
+                            <span className="rounded border border-teal-300/60 bg-teal-50/80 px-1.5 py-0.5 font-medium text-teal-900 dark:border-teal-800/60 dark:bg-teal-950/40 dark:text-teal-200">
+                              Google Maps Places API (
+                              {step.token_usage.costBreakdown.mapsCallsCount}{" "}
+                              chiamate): $0.000000 (Valore nominale: $
+                              {(
+                                step.token_usage.costBreakdown
+                                  .mapsNominalCostUsd ?? 0
+                              ).toFixed(6)}{" "}
+                              coperto da credito gratuito 300€)
+                            </span>
+                          ) : null}
                         </div>
                       )}
 

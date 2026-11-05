@@ -22,6 +22,18 @@ import { AsyncLocalStorage } from "node:async_hooks";
 
 export const TIER_2_PROMPT_TOKEN_THRESHOLD = 128_000;
 
+/**
+ * Prezzo ufficiale di Google Search Grounding per query ($35.00 per 1.000 query = $0.035 USD / query).
+ */
+export const DEFAULT_SEARCH_GROUNDING_PRICE_PER_QUERY = 0.035;
+
+export function getSearchGroundingPricePerQuery(): number {
+  return parseEnvFloat(
+    process.env.GEMINI_PRICE_SEARCH_GROUNDING_PER_QUERY,
+    DEFAULT_SEARCH_GROUNDING_PRICE_PER_QUERY
+  );
+}
+
 export type PricingTierLabel = "Tier 1" | "Tier 2";
 
 /**
@@ -164,6 +176,9 @@ export interface GeminiCallCostMetrics {
   inputCostUsd: number;
   cachedCostUsd: number;
   outputCostUsd: number;
+  tokensCostUsd: number;
+  groundingQueriesCount: number;
+  groundingCostUsd: number;
   totalCostUsd: number;
   formattedDebugLine: string;
 }
@@ -172,6 +187,72 @@ function toSafeInt(value: unknown): number {
   return typeof value === "number" && Number.isFinite(value) && value > 0
     ? Math.round(value)
     : 0;
+}
+
+/**
+ * Estrae il numero di query Google Search Grounding eseguite dalla risposta di Gemini:
+ * - Supporta `interaction.steps` (`step.type === "google_search_call"`) del client `@google/genai`.
+ * - Supporta `groundingMetadata.webSearchQueries` dello standard `generateContent`.
+ */
+export function extractGroundingSearchQueriesCount(rawResponse: unknown): number {
+  if (!rawResponse || typeof rawResponse !== "object") {
+    return 0;
+  }
+
+  const root = rawResponse as Record<string, unknown>;
+  let totalQueries = 0;
+
+  // 1. Interactions API format: root.steps
+  const steps = root.steps as unknown[] | undefined;
+  if (Array.isArray(steps)) {
+    for (const step of steps) {
+      if (!step || typeof step !== "object") continue;
+      const stepRecord = step as Record<string, unknown>;
+      if (
+        stepRecord.type === "google_search_call" ||
+        stepRecord.type === "search_call"
+      ) {
+        const args = (stepRecord.arguments ?? stepRecord.args) as
+          | Record<string, unknown>
+          | undefined;
+        if (Array.isArray(args?.queries)) {
+          totalQueries += args.queries.length;
+        } else if (typeof args?.query === "string" && args.query.trim()) {
+          totalQueries += 1;
+        } else {
+          totalQueries += 1;
+        }
+      }
+    }
+  }
+
+  // 2. Classic generateContent format o nested response
+  const responseObj =
+    (root.response as Record<string, unknown> | undefined) ?? root;
+  const candidates = responseObj.candidates as unknown[] | undefined;
+  const firstCandidate =
+    Array.isArray(candidates) &&
+    candidates[0] &&
+    typeof candidates[0] === "object"
+      ? (candidates[0] as Record<string, unknown>)
+      : undefined;
+
+  const groundingMeta =
+    (firstCandidate?.groundingMetadata as Record<string, unknown> | undefined) ??
+    (firstCandidate?.grounding_metadata as Record<string, unknown> | undefined) ??
+    (responseObj.groundingMetadata as Record<string, unknown> | undefined) ??
+    (responseObj.grounding_metadata as Record<string, unknown> | undefined);
+
+  if (groundingMeta) {
+    const webSearchQueries =
+      (groundingMeta.webSearchQueries as unknown[] | undefined) ??
+      (groundingMeta.web_search_queries as unknown[] | undefined);
+    if (Array.isArray(webSearchQueries)) {
+      totalQueries = Math.max(totalQueries, webSearchQueries.length);
+    }
+  }
+
+  return totalQueries;
 }
 
 /**
@@ -275,6 +356,7 @@ export function calculateGeminiCallCost(params: {
   model: string;
   durationMs: number;
   usageMetadata: NormalizedUsageMetadata;
+  groundingQueriesCount?: number;
 }): GeminiCallCostMetrics {
   const { stepLabel, stepNumber, model, durationMs, usageMetadata } = params;
   const pricing = getGeminiPricingConfig(model);
@@ -308,7 +390,13 @@ export function calculateGeminiCallCost(params: {
   const outputCostUsd =
     (billableOutputTokens / 1_000_000) * activeRates.outputPerMillionUsd;
 
-  const totalCostUsd = inputCostUsd + cachedCostUsd + outputCostUsd;
+  const tokensCostUsd = inputCostUsd + cachedCostUsd + outputCostUsd;
+
+  const groundingQueriesCount = Math.max(0, params.groundingQueriesCount ?? 0);
+  const groundingPricePerQuery = getSearchGroundingPricePerQuery();
+  const groundingCostUsd = groundingQueriesCount * groundingPricePerQuery;
+
+  const totalCostUsd = tokensCostUsd + groundingCostUsd;
 
   const formattedDebugLine = formatGeminiDebugLog({
     stepLabel,
@@ -319,6 +407,8 @@ export function calculateGeminiCallCost(params: {
     candidatesTokenCount: usageMetadata.candidatesTokenCount,
     cachedContentTokenCount: usageMetadata.cachedContentTokenCount,
     tier,
+    groundingQueriesCount,
+    groundingCostUsd,
   });
 
   return {
@@ -332,6 +422,9 @@ export function calculateGeminiCallCost(params: {
     inputCostUsd,
     cachedCostUsd,
     outputCostUsd,
+    tokensCostUsd,
+    groundingQueriesCount,
+    groundingCostUsd,
     totalCostUsd,
     formattedDebugLine,
   };
@@ -340,7 +433,7 @@ export function calculateGeminiCallCost(params: {
 /**
  * Formatta la stringa di debug leggibile per la console:
  * Es: `[DEBUG Agente - Step 2] Tempo: 1200ms | Costo: $0.004500 | Input: 1500 (Tier 1) | Output: 450`
- * (Se `cachedContentTokenCount > 0`, aggiunge anche `| Cached: <n>`).
+ * (Se sono presenti query di Search Grounding o token in cache, include i relativi dettagli).
  */
 export function formatGeminiDebugLog(params: {
   stepLabel: string;
@@ -351,6 +444,8 @@ export function formatGeminiDebugLog(params: {
   candidatesTokenCount: number;
   cachedContentTokenCount?: number;
   tier: PricingTierLabel;
+  groundingQueriesCount?: number;
+  groundingCostUsd?: number;
 }): string {
   const stepHeader =
     typeof params.stepNumber === "number"
@@ -362,7 +457,12 @@ export function formatGeminiDebugLog(params: {
       ? ` | Cached: ${params.cachedContentTokenCount}`
       : "";
 
-  return `[DEBUG Agente - ${stepHeader}] Tempo: ${Math.round(params.durationMs)}ms | Costo: $${params.totalCostUsd.toFixed(6)} | Input: ${params.promptTokenCount} (${params.tier}) | Output: ${params.candidatesTokenCount}${cachedSuffix}`;
+  const groundingSuffix =
+    params.groundingQueriesCount && params.groundingQueriesCount > 0
+      ? ` (incluso Grounding: ${params.groundingQueriesCount} query $${(params.groundingCostUsd ?? 0).toFixed(6)})`
+      : "";
+
+  return `[DEBUG Agente - ${stepHeader}] Tempo: ${Math.round(params.durationMs)}ms | Costo: $${params.totalCostUsd.toFixed(6)}${groundingSuffix} | Input: ${params.promptTokenCount} (${params.tier}) | Output: ${params.candidatesTokenCount}${cachedSuffix}`;
 }
 
 /**
@@ -407,6 +507,9 @@ export function aggregateStepCallMetrics(params: {
   let inputCostUsd = 0;
   let cachedCostUsd = 0;
   let outputCostUsd = 0;
+  let tokensCostUsd = 0;
+  let groundingQueriesCount = 0;
+  let groundingCostUsd = 0;
   let totalCostUsd = 0;
   let hasAnyTier2 = false;
 
@@ -425,6 +528,9 @@ export function aggregateStepCallMetrics(params: {
     inputCostUsd += call.inputCostUsd;
     cachedCostUsd += call.cachedCostUsd;
     outputCostUsd += call.outputCostUsd;
+    tokensCostUsd += call.tokensCostUsd ?? (call.inputCostUsd + call.cachedCostUsd + call.outputCostUsd);
+    groundingQueriesCount += call.groundingQueriesCount ?? 0;
+    groundingCostUsd += call.groundingCostUsd ?? 0;
     totalCostUsd += call.totalCostUsd;
     if (call.tier === "Tier 2") {
       hasAnyTier2 = true;
@@ -450,6 +556,8 @@ export function aggregateStepCallMetrics(params: {
     candidatesTokenCount: aggregatedUsage.candidatesTokenCount,
     cachedContentTokenCount: aggregatedUsage.cachedContentTokenCount,
     tier,
+    groundingQueriesCount,
+    groundingCostUsd,
   });
 
   return {
@@ -463,6 +571,9 @@ export function aggregateStepCallMetrics(params: {
     inputCostUsd,
     cachedCostUsd,
     outputCostUsd,
+    tokensCostUsd,
+    groundingQueriesCount,
+    groundingCostUsd,
     totalCostUsd,
     formattedDebugLine,
   };
@@ -472,8 +583,9 @@ export function aggregateStepCallMetrics(params: {
  * Wrapper/Interceptor ad ordine superiore che avvolge una singola chiamata all'API di Gemini:
  * 1. Misura il tempo di esecuzione esatto in millisecondi (`performance.now()`).
  * 2. Estrae `usageMetadata` (`promptTokenCount`, `candidatesTokenCount`, `cachedContentTokenCount`).
- * 3. Calcola il costo dinamico in USD con la soglia dei 128.000 token (Tier 1 vs Tier 2).
- * 4. Stampa immediatamente la riga di debug nella console server/terminale e la registra nel collector dello Step.
+ * 3. Estrae il numero di query Google Search Grounding eseguite e ne calcola il costo ($0.035/query).
+ * 4. Calcola il costo dinamico in USD con la soglia dei 128.000 token (Tier 1 vs Tier 2).
+ * 5. Stampa immediatamente la riga di debug nella console server/terminale e la registra nel collector dello Step.
  */
 export async function withGeminiUsageTracker<TResponse>(
   options: {
@@ -492,12 +604,14 @@ export async function withGeminiUsageTracker<TResponse>(
   const durationMs = Math.max(1, Math.round(performance.now() - startMs));
 
   const usageMetadata = extractGeminiUsageMetadata(response);
+  const groundingQueriesCount = extractGroundingSearchQueriesCount(response);
   const metrics = calculateGeminiCallCost({
     stepLabel: options.stepLabel,
     stepNumber: options.stepNumber,
     model: options.model,
     durationMs,
     usageMetadata,
+    groundingQueriesCount,
   });
 
   // Registra automaticamente la metrica nello step corrente se attivo un AsyncLocalStorage collector

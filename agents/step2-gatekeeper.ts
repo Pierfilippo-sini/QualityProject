@@ -308,7 +308,7 @@ export interface SingleCompanyTaskOutcome {
 
 export function buildStep2SystemInstruction(): string {
   return `Sei il Subagente di Data Extraction & Gatekeeper in Parallelo alimentato da ${UNIFIED_GEMINI_MODEL}.
-Analizzi UNA SINGOLA AZIENDA alla volta tramite Google Search (SENZA MAI usare né citare LinkedIn) per estrarre:
+Analizzi UNA SINGOLA AZIENDA alla volta esaminando i dati forniti nel prompt (scheda ReportAziende/portali bilancio, testo del sito ufficiale, dati camerali e note preliminari, SENZA MAI usare né citare LinkedIn) per estrarre:
 1. Ragione Sociale principale esattamente corrispondente alla persona giuridica analizzata, Partita IVA (11 cifre), Città e Regione effettive della sede, Codice ATECO.
    - ATTENZIONE CONTROLLANTE VS CONTROLLATA: Non mescolare MAI i dati di bilancio (fatturato, dipendenti, P.IVA, ATECO) della Holding capogruppo con quelli della Controllata operativa o viceversa (es. "Edison S.p.A." P.IVA 08263330014 vs "Edison Energia S.p.A." P.IVA 08526440154; "Iren S.p.A." vs "Iren Mercato S.p.A."; "A2A S.p.A." vs "A2A Energia S.p.A."). La Partita IVA, il fatturato, i dipendenti e il codice ATECO devono appartenere ESCLUSIVAMENTE alla specifica Ragione Sociale indicata in \`ragioneSociale\`.
 2. CLUSTERIZZAZIONE STANDARDIZZATA OBBLIGATORIA (tassonomia chiusa GICS/ATECO B2B):
@@ -316,14 +316,14 @@ Analizzi UNA SINGOLA AZIENDA alla volta tramite Google Search (SENZA MAI usare n
    - \`sub_cluster_specifico\`: stringa breve di MASSIMO 3-4 parole che descrive la nicchia esatta dell'azienda.
 3. DATI DI BILANCIO OBBLIGATORI (FATTURATO E DIPENDENTI - PRIORITÀ ASSOLUTA):
    - Devi SEMPRE estrarre il Fatturato dell'ULTIMO anno disponibile (\`fatturatoValore\` in Euro) e il numero dei Dipendenti (\`dipendenti\`) più recente della specifica società analizzata.
-   - Se nel prompt sono già forniti i "[DATI CERTIFICATI DA REPORTAZIENDE.IT / FATTURATOITALIA.IT]", usa esattamente quei valori di fatturato, anno, dipendenti, Partita IVA e ATECO.
+   - Se nel prompt sono già forniti i dati da ReportAziende o fonti camerali, usa esattamente quei valori di fatturato, anno, dipendenti, Partita IVA e ATECO.
    - Il bacino clienti è secondario; il fatturato numerico e i dipendenti sono TASSATIVAMENTE OBBLIGATORI.
    - \`altriDatiChiave\`: sintesi secca dei numeri chiave (es. "Fatturato 2025: 7.315.516.457 €; 564 dipendenti.").
 
 REGOLE TASSATIVE:
-- PREVALENZA DATI RECENTI: riporta ESCLUSIVAMENTE i dati di bilancio più recenti disponibili.
+- PREVALENZA DATI RECENTI: riporta ESCLUSIVAMENTE i dati di bilancio più recenti disponibili nei testi forniti.
 - VALIDAZIONE DIMENSIONE E GEOGRAFIA: verifica sia fasce numeriche sia categorie dimensionali/mercato (PMI, Mid-Cap, Grandi Imprese, Aziende Quotate, Startup) e il vincolo geografico rigido.
-- DIVIETO LINKEDIN E OBBLIGO BILANCIO: reperisci con esattezza fatturato e dipendenti da fonti ufficiali/camerali; non includere mai URL di linkedin.com.
+- DIVIETO LINKEDIN E OBBLIGO BILANCIO: estrai con esattezza fatturato e dipendenti dalle fonti ufficiali/camerali fornite; non includere mai URL di linkedin.com.
 - REGOLA ANTI-TRONCAMENTO: Ogni campo testuale deve essere costituito da frasi complete, sintetiche e ben concluse che terminano sempre con un punto fermo (.). È severamente vietato troncare le frasi o usare i punti di sospensione (...).
 - Rispondi ESCLUSIVAMENTE con l'oggetto JSON conforme allo schema.`;
 }
@@ -421,20 +421,26 @@ export async function analyzeSingleCandidateInIsolation(
     siteCtx.cleanText
       ? `Testo grezzo estratto dal sito ufficiale (HTML/CSS rimossi):\n${siteCtx.cleanText}`
       : "",
-    finCtx?.cleanText && !reportAziendeData
-      ? `Dati camerali e di bilancio estratti direttamente da portale finanziario pubblico:\n${finCtx.cleanText}`
+    finCtx?.cleanText
+      ? `Dati camerali e di bilancio estratti da portale pubblico:\n${finCtx.cleanText}`
       : "",
-    finCtx?.financials?.fatturatoValore && !reportAziendeData
+    finCtx?.financials?.fatturatoValore && !reportAziendeData?.fatturatoValore
       ? `Fatturato estratto da fonte camerale: € ${finCtx.financials.fatturatoValore.toLocaleString("it-IT")} (anno ${finCtx.financials.fatturatoAnno ?? "ultimo"})`
       : "",
-    finCtx?.financials?.dipendenti && !reportAziendeData
+    finCtx?.financials?.dipendenti && !reportAziendeData?.dipendenti
       ? `Dipendenti estratti da fonte camerale: ${finCtx.financials.dipendenti}`
       : "",
-    (reportAziendeData?.atecoCodice || finCtx?.financials?.atecoCodice)
-      ? `Codice ATECO estratto da fonte camerale: ${reportAziendeData?.atecoCodice || finCtx?.financials?.atecoCodice}`
+    siteCtx.financials?.fatturatoValore && !reportAziendeData?.fatturatoValore && !finCtx?.financials?.fatturatoValore
+      ? `Fatturato estratto dal sito ufficiale: € ${siteCtx.financials.fatturatoValore.toLocaleString("it-IT")} (anno ${siteCtx.financials.fatturatoAnno ?? "ultimo"})`
+      : "",
+    siteCtx.financials?.dipendenti && !reportAziendeData?.dipendenti && !finCtx?.financials?.dipendenti
+      ? `Dipendenti estratti dal sito ufficiale: ${siteCtx.financials.dipendenti}`
+      : "",
+    (reportAziendeData?.atecoCodice || finCtx?.financials?.atecoCodice || siteCtx.financials?.atecoCodice)
+      ? `Codice ATECO estratto da fonte verificata: ${reportAziendeData?.atecoCodice || finCtx?.financials?.atecoCodice || siteCtx.financials?.atecoCodice}`
       : "",
     `Vincoli obbligatori utente: Settore=${constraints.settore ?? "N.D."} | Dimensione=${constraints.dimensioneAziendale ?? "N.D."} | Città/Province=${(constraints.province ?? []).join(", ") || "Nessuna specifica"} | Regioni=${constraints.regioni.join(", ") || constraints.macroArea || "Italia"} | FatturatoMin=${constraints.fatturatoMin ?? "Nessuno"} | FatturatoMax=${constraints.fatturatoMax ?? "Nessuno"} | DipendentiMin=${constraints.dipendentiMin ?? "Nessuno"} | DipendentiMax=${constraints.dipendentiMax ?? "Nessuno"}`,
-    `Cerca su Google Search i dati ufficiali PIÙ RECENTI di "${cleanName}" (privilegiando reportaziende.it tramite nome e Partita IVA, SENZA usare LinkedIn): Partita IVA, Fatturato in Euro dell'ULTIMO anno disponibile (OBBLIGATORIO), Dipendenti (OBBLIGATORIO), Codice ATECO, sede effettiva e classificazione standardizzata \`cluster_macro\` + \`sub_cluster_specifico\` (max 3-4 parole). Il numero di clienti è secondario: è imperativo estrarre con certezza fatturato e dipendenti. Ogni campo testuale descrittivo deve terminare sempre con un punto fermo (.) senza alcun troncamento o punti di sospensione (...).`,
+    `Estrai dai dati forniti nel prompt (scheda ReportAziende, testo del sito ufficiale, dati camerali e note preliminari) le informazioni verificate di "${cleanName}": Partita IVA, Fatturato in Euro dell'ULTIMO anno disponibile (OBBLIGATORIO), Anno di bilancio (OBBLIGATORIO), Dipendenti (OBBLIGATORIO), Codice ATECO, sede effettiva e classificazione standardizzata \`cluster_macro\` + \`sub_cluster_specifico\` (max 3-4 parole). Se sono presenti dati certificati nei testi sopra, riportali con precisione. Ogni campo testuale descrittivo deve terminare sempre con un punto fermo (.) senza alcun troncamento o punti di sospensione (...).`,
   ]
     .filter(Boolean)
     .join("\n");

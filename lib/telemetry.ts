@@ -190,6 +190,22 @@ export class ZeroTokenTelemetry {
             totalTokenCount: aggregatedMetrics.usageMetadata.totalTokenCount,
             tier: aggregatedMetrics.tier,
             totalCostUsd: aggregatedMetrics.totalCostUsd,
+            nominalCostUsd: aggregatedMetrics.totalCostUsd,
+            inputCostUsd: aggregatedMetrics.inputCostUsd,
+            outputCostUsd: aggregatedMetrics.outputCostUsd,
+            cachedCostUsd: aggregatedMetrics.cachedCostUsd,
+            groundingQueriesCount: aggregatedMetrics.groundingQueriesCount,
+            groundingCostUsd: aggregatedMetrics.groundingCostUsd,
+            costBreakdown: {
+              inputTokensCostUsd: aggregatedMetrics.inputCostUsd,
+              outputTokensCostUsd: aggregatedMetrics.outputCostUsd,
+              cachedTokensCostUsd: aggregatedMetrics.cachedCostUsd,
+              tokensTotalCostUsd: aggregatedMetrics.tokensCostUsd,
+              groundingQueriesCount: aggregatedMetrics.groundingQueriesCount,
+              groundingCostUsd: aggregatedMetrics.groundingCostUsd,
+              billedCostUsd: aggregatedMetrics.totalCostUsd,
+              nominalCostUsd: aggregatedMetrics.totalCostUsd,
+            },
             apiCallsCount: calls.length,
             formattedDebugLine: aggregatedMetrics.formattedDebugLine,
           }
@@ -236,6 +252,10 @@ export class ZeroTokenTelemetry {
 
   getSnapshot(): DebugTrace {
     let totalCostUsd = 0;
+    let totalNominalCostUsd = 0;
+    let mapsCreditSavedUsd = 0;
+    let totalGroundingCostUsd = 0;
+    let totalTokensCostUsd = 0;
     let totalInputTokens = 0;
     let totalOutputTokens = 0;
     let totalCachedTokens = 0;
@@ -243,6 +263,18 @@ export class ZeroTokenTelemetry {
     for (const step of this.subagentSteps) {
       if (step.token_usage) {
         totalCostUsd += step.token_usage.totalCostUsd;
+        totalNominalCostUsd +=
+          step.token_usage.nominalCostUsd ?? step.token_usage.totalCostUsd;
+        mapsCreditSavedUsd += step.token_usage.mapsCreditCoveredUsd ?? 0;
+        totalGroundingCostUsd += step.token_usage.groundingCostUsd ?? 0;
+
+        const tokensCost =
+          step.token_usage.costBreakdown?.tokensTotalCostUsd ??
+          (step.token_usage.inputCostUsd ?? 0) +
+            (step.token_usage.outputCostUsd ?? 0) +
+            (step.token_usage.cachedCostUsd ?? 0);
+        totalTokensCostUsd += tokensCost;
+
         totalInputTokens += step.token_usage.promptTokenCount;
         totalOutputTokens += step.token_usage.candidatesTokenCount;
         totalCachedTokens += step.token_usage.cachedContentTokenCount;
@@ -253,6 +285,10 @@ export class ZeroTokenTelemetry {
       guardrail_passed: this.guardrailPassed,
       requested_count: this.requestedCount,
       total_cost_usd: Number(totalCostUsd.toFixed(6)),
+      total_nominal_cost_usd: Number(totalNominalCostUsd.toFixed(6)),
+      maps_credit_saved_usd: Number(mapsCreditSavedUsd.toFixed(6)),
+      total_grounding_cost_usd: Number(totalGroundingCostUsd.toFixed(6)),
+      total_tokens_cost_usd: Number(totalTokensCostUsd.toFixed(6)),
       total_input_tokens: totalInputTokens,
       total_output_tokens: totalOutputTokens,
       total_cached_tokens: totalCachedTokens,

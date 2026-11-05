@@ -19,8 +19,11 @@ export {
 
 export {
   TIER_2_PROMPT_TOKEN_THRESHOLD,
+  DEFAULT_SEARCH_GROUNDING_PRICE_PER_QUERY,
+  getSearchGroundingPricePerQuery,
   getGeminiPricingConfig,
   extractGeminiUsageMetadata,
+  extractGroundingSearchQueriesCount,
   calculateGeminiCallCost,
   formatGeminiDebugLog,
   withGeminiUsageTracker,

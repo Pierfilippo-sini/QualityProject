@@ -173,6 +173,20 @@ export interface DiscardedCompanyTrace {
   reason: string;
 }
 
+export interface StepCostBreakdown {
+  inputTokensCostUsd: number;
+  outputTokensCostUsd: number;
+  cachedTokensCostUsd: number;
+  tokensTotalCostUsd: number;
+  groundingQueriesCount?: number;
+  groundingCostUsd?: number;
+  mapsCallsCount?: number;
+  mapsNominalCostUsd?: number;
+  mapsCreditCoveredUsd?: number;
+  billedCostUsd: number;
+  nominalCostUsd: number;
+}
+
 export interface StepTokenUsageSummary {
   promptTokenCount: number;
   candidatesTokenCount: number;
@@ -181,7 +195,17 @@ export interface StepTokenUsageSummary {
   toolUsePromptTokenCount?: number;
   totalTokenCount: number;
   tier: "Tier 1" | "Tier 2";
-  totalCostUsd: number;
+  totalCostUsd: number; // Costo effettivo addebitato (Google Maps escluso perché coperto da 300€ di credito gratuito)
+  nominalCostUsd?: number; // Costo nominale completo (incluso Maps e Grounding)
+  inputCostUsd?: number;
+  outputCostUsd?: number;
+  cachedCostUsd?: number;
+  groundingQueriesCount?: number;
+  groundingCostUsd?: number;
+  mapsCallsCount?: number;
+  mapsNominalCostUsd?: number;
+  mapsCreditCoveredUsd?: number;
+  costBreakdown?: StepCostBreakdown;
   apiCallsCount: number;
   formattedDebugLine: string;
 }
@@ -201,7 +225,11 @@ export interface SubagentStepTrace {
 export interface DebugTrace {
   guardrail_passed: boolean;
   requested_count: number;
-  total_cost_usd?: number;
+  total_cost_usd?: number; // Costo effettivo addebitato (escluso Maps coperto da credito gratuito)
+  total_nominal_cost_usd?: number; // Costo nominale totale
+  maps_credit_saved_usd?: number; // Risparmio Maps coperto da credito gratuito 300€
+  total_grounding_cost_usd?: number; // Costo totale query Google Search Grounding ($0.035 / query)
+  total_tokens_cost_usd?: number; // Costo totale token Gemini
   total_input_tokens?: number;
   total_output_tokens?: number;
   total_cached_tokens?: number;
