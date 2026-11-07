@@ -67,14 +67,16 @@ export async function verifyPinConstantTime(
 }
 
 /**
- * Genera un token di sessione stateless firmato con HMAC-SHA256 (<expiresAtMs>.<hexSignature>).
+ * Genera un token di sessione stateless firmato con HMAC-SHA256 (<expiresAtMs>.<hexSignature>.<target>).
  */
 export async function createSessionToken(
   secret: string,
-  maxAgeSeconds: number = SESSION_MAX_AGE_SECONDS
+  maxAgeSeconds: number = SESSION_MAX_AGE_SECONDS,
+  target: string = "/"
 ): Promise<string> {
   const expiresAtMs = Date.now() + maxAgeSeconds * 1000;
-  const payload = `${TOKEN_PREFIX}:${expiresAtMs}`;
+  const safeTarget = target.startsWith("/") ? target : `/${target}`;
+  const payload = `${TOKEN_PREFIX}:${expiresAtMs}:${safeTarget}`;
   const key = await importHmacKey(secret);
   const signature = await globalThis.crypto.subtle.sign(
     "HMAC",
@@ -82,7 +84,75 @@ export async function createSessionToken(
     new TextEncoder().encode(payload)
   );
 
-  return `${expiresAtMs}.${toHex(new Uint8Array(signature))}`;
+  return `${expiresAtMs}.${toHex(new Uint8Array(signature))}.${encodeURIComponent(safeTarget)}`;
+}
+
+export interface SessionVerificationResult {
+  valid: boolean;
+  target: string;
+}
+
+/**
+ * Verifica un token di sessione contro una lista di possibili segreti (es. ACCESS_GATE_SECRET, BRAIN_GATE_SECRET)
+ * e restituisce lo stato di validità unitamente al target di destinazione.
+ */
+export async function verifySessionTokenWithTarget(
+  token: string | undefined,
+  secrets: (string | undefined)[]
+): Promise<SessionVerificationResult> {
+  if (!token) {
+    return { valid: false, target: "/" };
+  }
+
+  const validSecrets = secrets.filter(
+    (s): s is string => typeof s === "string" && s.length > 0
+  );
+  if (validSecrets.length === 0) {
+    return { valid: false, target: "/" };
+  }
+
+  const parts = token.split(".");
+  if (parts.length !== 2 && parts.length !== 3) {
+    return { valid: false, target: "/" };
+  }
+
+  const [expiresAtRaw, signatureHex] = parts;
+  const expiresAtMs = Number(expiresAtRaw);
+  if (!Number.isFinite(expiresAtMs) || expiresAtMs <= Date.now()) {
+    return { valid: false, target: "/" };
+  }
+
+  const signatureBytes = fromHex(signatureHex);
+  if (!signatureBytes) {
+    return { valid: false, target: "/" };
+  }
+
+  const target = parts.length === 3 ? decodeURIComponent(parts[2] || "/") : "/";
+  const payload =
+    parts.length === 3
+      ? `${TOKEN_PREFIX}:${expiresAtRaw}:${target}`
+      : `${TOKEN_PREFIX}:${expiresAtRaw}`;
+
+  const encodedPayload = new TextEncoder().encode(payload);
+
+  for (const secret of validSecrets) {
+    try {
+      const key = await importHmacKey(secret);
+      const isMatch = await globalThis.crypto.subtle.verify(
+        "HMAC",
+        key,
+        signatureBytes,
+        encodedPayload
+      );
+      if (isMatch) {
+        return { valid: true, target };
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  return { valid: false, target: "/" };
 }
 
 /**
@@ -92,33 +162,9 @@ export async function verifySessionToken(
   token: string | undefined,
   secret: string | undefined
 ): Promise<boolean> {
-  if (!token || !secret || secret.length === 0) {
+  if (!secret) {
     return false;
   }
-
-  const parts = token.split(".");
-  if (parts.length !== 2) {
-    return false;
-  }
-
-  const [expiresAtRaw, signatureHex] = parts;
-  const expiresAtMs = Number(expiresAtRaw);
-  if (!Number.isFinite(expiresAtMs) || expiresAtMs <= Date.now()) {
-    return false;
-  }
-
-  const signatureBytes = fromHex(signatureHex);
-  if (!signatureBytes) {
-    return false;
-  }
-
-  const payload = `${TOKEN_PREFIX}:${expiresAtRaw}`;
-  const key = await importHmacKey(secret);
-
-  return globalThis.crypto.subtle.verify(
-    "HMAC",
-    key,
-    signatureBytes,
-    new TextEncoder().encode(payload)
-  );
+  const result = await verifySessionTokenWithTarget(token, [secret]);
+  return result.valid;
 }

@@ -1,9 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { SESSION_COOKIE_NAME, verifySessionToken } from "@/lib/auth";
+import {
+  SESSION_COOKIE_NAME,
+  verifySessionTokenWithTarget,
+} from "@/lib/auth";
 
 /**
  * Middleware di Protezione Access Gate (SAD Capitolo 8).
- * Intercetta tutte le rotte della dashboard e gli endpoint API protetti,
+ * Intercetta tutte le rotte della dashboard, il nuovo ambiente /ui e gli endpoint API protetti,
  * verificando il cookie stateless firmato `scout_session_token`.
  */
 export async function middleware(request: NextRequest) {
@@ -15,17 +18,36 @@ export async function middleware(request: NextRequest) {
   }
 
   const sessionToken = request.cookies.get(SESSION_COOKIE_NAME)?.value;
-  const isAuthenticated = await verifySessionToken(
-    sessionToken,
-    process.env.ACCESS_GATE_SECRET
-  );
+  const session = await verifySessionTokenWithTarget(sessionToken, [
+    process.env.ACCESS_GATE_SECRET,
+    process.env.BRAIN_GATE_SECRET,
+  ]);
+  const isAuthenticated = session.valid;
 
-  // Gestione rotta pubblica /login
+  // Gestione rotta pubblica /login (e redirect da /login-new alla pagina definitiva /login)
+  if (pathname === "/login-new") {
+    const destination = isAuthenticated ? session.target || "/" : "/login";
+    return NextResponse.redirect(new URL(destination, request.url));
+  }
+
   if (pathname === "/login") {
     if (isAuthenticated) {
-      return NextResponse.redirect(new URL("/", request.url));
+      const destination = session.target || "/";
+      return NextResponse.redirect(new URL(destination, request.url));
     }
     return NextResponse.next();
+  }
+
+  // Isolamento tra le due stanze protette:
+  // - Chi accede con la password della stanza /ui (target === "/ui") viene mantenuto in /ui
+  // - Chi accede con la password della dashboard principale (target === "/") non può accedere a /ui
+  if (isAuthenticated) {
+    if (session.target === "/ui" && !pathname.startsWith("/ui") && !pathname.startsWith("/api/")) {
+      return NextResponse.redirect(new URL("/ui", request.url));
+    }
+    if (session.target !== "/ui" && pathname.startsWith("/ui")) {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
   }
 
   // Protezione endpoint API (/api/scout, ecc.) con risposta JSON 401
@@ -42,7 +64,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Protezione rotte UI (Dashboard principale e sottopagine)
+  // Protezione rotte UI (Dashboard principale, ambiente /ui e relative sottopagine)
   if (!isAuthenticated) {
     const loginUrl = new URL("/login", request.url);
     const response = NextResponse.redirect(loginUrl);

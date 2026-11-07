@@ -128,3 +128,21 @@
     @apply font-sans;
   }
 }
+
+
+/* --- Spline loader (route /login-new) --- */
+.loader {
+  width: 48px;
+  height: 48px;
+  border: 3px solid rgb(255 255 255 / 0.15);
+  border-top-color: rgb(255 255 255 / 0.85);
+  border-radius: 9999px;
+  display: inline-block;
+  animation: loader-spin 0.9s linear infinite;
+}
+
+@keyframes loader-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

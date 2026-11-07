@@ -13,12 +13,14 @@ import {
  */
 export async function POST(request: NextRequest) {
   try {
-    const secret = process.env.ACCESS_GATE_SECRET;
-    if (!secret) {
+    const accessSecret = process.env.ACCESS_GATE_SECRET;
+    const brainSecret = process.env.BRAIN_GATE_SECRET;
+
+    if (!accessSecret && !brainSecret) {
       return NextResponse.json(
         {
           error:
-            "Configurazione server incompleta: ACCESS_GATE_SECRET non definita.",
+            "Configurazione server incompleta: nessuna chiave di accesso definita.",
         },
         { status: 500 }
       );
@@ -36,17 +38,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const isValid = await verifyPinConstantTime(pin, secret);
-    if (!isValid) {
+    let matchedSecret: string | null = null;
+    let redirectTo = "/";
+
+    // Verifica prioritaria credenziale ambiente Cervello / UI
+    if (brainSecret && (await verifyPinConstantTime(pin, brainSecret))) {
+      matchedSecret = brainSecret;
+      redirectTo = "/ui";
+    } else if (accessSecret && (await verifyPinConstantTime(pin, accessSecret))) {
+      matchedSecret = accessSecret;
+      redirectTo = "/";
+    }
+
+    if (!matchedSecret) {
       return NextResponse.json(
         { error: "PIN di accesso non valido. Riprova." },
         { status: 401 }
       );
     }
 
-    const token = await createSessionToken(secret, SESSION_MAX_AGE_SECONDS);
+    const token = await createSessionToken(
+      matchedSecret,
+      SESSION_MAX_AGE_SECONDS,
+      redirectTo
+    );
     const response = NextResponse.json(
-      { authenticated: true },
+      { authenticated: true, redirectTo },
       { status: 200 }
     );
 
