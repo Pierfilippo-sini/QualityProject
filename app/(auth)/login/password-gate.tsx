@@ -58,8 +58,7 @@ export function PasswordGate({
       onSuccess?.();
       await new Promise((r) => setTimeout(r, 600));
 
-      router.replace(destination);
-      router.refresh();
+      window.location.href = destination;
     } catch {
       setError("Errore di connessione al server di autenticazione.");
       setIsSubmitting(false);

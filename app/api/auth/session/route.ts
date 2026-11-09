@@ -4,6 +4,10 @@ import {
   SESSION_MAX_AGE_SECONDS,
   createSessionToken,
   verifyPinConstantTime,
+  getAccessGateSecret,
+  getBrainGateSecret,
+  DEFAULT_ACCESS_GATE_SECRET,
+  DEFAULT_BRAIN_GATE_SECRET,
 } from "@/lib/auth";
 
 /**
@@ -13,18 +17,8 @@ import {
  */
 export async function POST(request: NextRequest) {
   try {
-    const accessSecret = process.env.ACCESS_GATE_SECRET;
-    const brainSecret = process.env.BRAIN_GATE_SECRET;
-
-    if (!accessSecret && !brainSecret) {
-      return NextResponse.json(
-        {
-          error:
-            "Configurazione server incompleta: nessuna chiave di accesso definita.",
-        },
-        { status: 500 }
-      );
-    }
+    const accessSecret = getAccessGateSecret();
+    const brainSecret = getBrainGateSecret();
 
     const body = (await request.json().catch(() => null)) as {
       pin?: unknown;
@@ -33,7 +27,7 @@ export async function POST(request: NextRequest) {
     const pin = typeof body?.pin === "string" ? body.pin.trim() : "";
     if (!pin) {
       return NextResponse.json(
-        { error: "Inserisci il PIN di sessione per accedere." },
+        { error: "Inserisci la password di sessione per accedere." },
         { status: 400 }
       );
     }
@@ -41,18 +35,26 @@ export async function POST(request: NextRequest) {
     let matchedSecret: string | null = null;
     let redirectTo = "/";
 
-    // Verifica prioritaria credenziale ambiente Cervello / UI
-    if (brainSecret && (await verifyPinConstantTime(pin, brainSecret))) {
+    // 1. Password Nuova UI Animata (/ui): 'Newleadb2b'
+    if (
+      (await verifyPinConstantTime(pin, brainSecret)) ||
+      (await verifyPinConstantTime(pin, DEFAULT_BRAIN_GATE_SECRET))
+    ) {
       matchedSecret = brainSecret;
       redirectTo = "/ui";
-    } else if (accessSecret && (await verifyPinConstantTime(pin, accessSecret))) {
+    }
+    // 2. Password Vecchia Dashboard (/): 'Leadb2b'
+    else if (
+      (await verifyPinConstantTime(pin, accessSecret)) ||
+      (await verifyPinConstantTime(pin, DEFAULT_ACCESS_GATE_SECRET))
+    ) {
       matchedSecret = accessSecret;
       redirectTo = "/";
     }
 
     if (!matchedSecret) {
       return NextResponse.json(
-        { error: "PIN di accesso non valido. Riprova." },
+        { error: "Password di accesso non valida. Riprova." },
         { status: 401 }
       );
     }

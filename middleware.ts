@@ -2,6 +2,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import {
   SESSION_COOKIE_NAME,
   verifySessionTokenWithTarget,
+  DEFAULT_ACCESS_GATE_SECRET,
+  DEFAULT_BRAIN_GATE_SECRET,
 } from "@/lib/auth";
 
 /**
@@ -17,10 +19,13 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  const accessSecret = process.env.ACCESS_GATE_SECRET || DEFAULT_ACCESS_GATE_SECRET;
+  const brainSecret = process.env.BRAIN_GATE_SECRET || DEFAULT_BRAIN_GATE_SECRET;
+
   const sessionToken = request.cookies.get(SESSION_COOKIE_NAME)?.value;
   const session = await verifySessionTokenWithTarget(sessionToken, [
-    process.env.ACCESS_GATE_SECRET,
-    process.env.BRAIN_GATE_SECRET,
+    accessSecret,
+    brainSecret,
   ]);
   const isAuthenticated = session.valid;
 

@@ -26,8 +26,7 @@ export default function DashboardLayout({
     try {
       await fetch("/api/auth/session", { method: "DELETE" });
       resetResults();
-      router.replace("/login");
-      router.refresh();
+      window.location.href = "/login";
     } finally {
       setIsLoggingOut(false);
     }
