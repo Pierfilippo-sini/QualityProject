@@ -609,7 +609,9 @@
 #reviews .rv-sheet {
   position: sticky;
   top: calc(12vh + var(--i, 0) * 16px);
-  min-height: min(66vh, 640px);
+  min-height: min(62vh, 560px);
+  height: min(62vh, 560px);
+  max-height: min(62vh, 560px);
   margin-bottom: 18vh;
   perspective: 1600px;
   padding: 0 !important;
@@ -623,7 +625,8 @@
   position: relative;
   width: 100%;
   height: 100%;
-  min-height: min(66vh, 640px);
+  min-height: min(62vh, 560px);
+  max-height: min(62vh, 560px);
   display: grid;
   grid-template-columns: 1fr;
   grid-template-rows: 1fr;
@@ -638,13 +641,14 @@
   grid-area: 1 / 1 / 2 / 2;
   width: 100%;
   height: 100%;
-  min-height: min(66vh, 640px);
+  min-height: min(62vh, 560px);
+  max-height: min(62vh, 560px);
   box-sizing: border-box;
-  padding: clamp(22px, 3vw, 44px);
+  padding: clamp(18px, 2.5vw, 36px);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 28px;
+  overflow: hidden;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }
@@ -720,35 +724,36 @@
   transform: translateX(4px);
 }
 
-/* Back Face */
+/* ==================== RETRO SCHEDA (MINIMALE E COMPATTO) ==================== */
 #reviews .rv-back-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 16px;
+  padding-bottom: 8px;
   border-bottom: 1px solid var(--color-8, rgba(0, 0, 0, 0.12));
+  flex-shrink: 0;
 }
 #reviews .rv-back-header-left {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 #reviews .rv-back-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   font-family: var(--font-1);
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 700;
   letter-spacing: 0.04em;
-  padding: 3px 8px;
+  padding: 2.5px 7px;
   border-radius: var(--radius-1);
   background: var(--color-2);
   color: var(--color-1);
 }
 #reviews .rv-back-company-name {
   font-family: var(--font-1);
-  font-size: clamp(14px, 1.2vw, 17px);
+  font-size: clamp(13px, 1.1vw, 15px);
   font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--color-2);
@@ -757,15 +762,15 @@
 #reviews .rv-back-return-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   font-family: var(--font-1);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--color-4);
   background: transparent;
   border: 1px solid var(--color-8, rgba(0, 0, 0, 0.14));
   border-radius: var(--radius-1);
-  padding: 6px 14px;
+  padding: 3.5px 11px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -778,19 +783,20 @@
 /* Back Face Body */
 #reviews .rv-back-body {
   display: grid;
-  grid-template-columns: clamp(140px, 15.5%, 175px) minmax(0, 1fr);
-  gap: clamp(14px, 2vw, 24px);
+  grid-template-columns: clamp(130px, 14.5%, 155px) minmax(0, 1fr);
+  gap: clamp(14px, 1.8vw, 22px);
   align-items: stretch;
   flex: 1;
   min-height: 0;
-  height: 100%;
+  height: calc(100% - 34px);
+  padding-top: 8px;
 }
 
-/* Colonna sinistra ultra-compatta */
+/* Colonna sinistra ultra-compatta (sfondo nativo della tessera) */
 #reviews .rv-back-col-left {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   padding-right: 12px;
   border-right: 1px solid var(--color-8, rgba(0, 0, 0, 0.12));
   height: 100%;
@@ -799,10 +805,10 @@
 #reviews .rv-back-field {
   display: flex;
   flex-direction: column;
-  gap: 2.5px;
+  gap: 1.5px;
 }
 #reviews .rv-back-field__label {
-  font-size: 9.5px;
+  font-size: 9px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -816,28 +822,28 @@
   word-break: break-word;
 }
 #reviews .rv-back-field__val--strong {
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: -0.01em;
 }
 #reviews .rv-back-field__row {
   display: flex;
   align-items: flex-start;
-  gap: 5px;
-  font-size: 11px;
-  line-height: 1.3;
+  gap: 4px;
+  font-size: 10.5px;
+  line-height: 1.25;
   color: var(--color-2);
 }
 #reviews .rv-back-field-icon {
   flex-shrink: 0;
-  margin-top: 1.5px;
+  margin-top: 2px;
   color: var(--color-4);
 }
 #reviews .rv-back-field__link {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  font-size: 11px;
+  gap: 4px;
+  font-size: 10.5px;
   color: var(--color-2);
   text-decoration: none;
   transition: color 0.2s;
@@ -850,19 +856,19 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 140px;
+  max-width: 125px;
 }
 
 /* Fonti a cascata (la voce più in basso nella colonna sinistra!) */
 #reviews .rv-back-sources-box {
   margin-top: auto;
-  padding-top: 8px;
+  padding-top: 6px;
   border-top: 1px solid var(--color-8, rgba(0, 0, 0, 0.12));
 }
 #reviews .rv-back-sources-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   background: transparent;
   border: none;
   padding: 0;
@@ -873,29 +879,29 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 17px;
-  height: 17px;
+  min-width: 16px;
+  height: 16px;
   padding: 0 4px;
-  border-radius: 9px;
+  border-radius: 8px;
   background: var(--color-2);
   color: var(--color-1);
-  font-size: 9.5px;
+  font-size: 9px;
   font-weight: 700;
 }
 #reviews .rv-back-sources-chevron {
   color: var(--color-4);
-  transition: transform 0.25s ease;
+  transition: transform 0.2s ease;
 }
 #reviews .rv-back-sources-chevron.is-open {
   transform: rotate(180deg);
 }
 #reviews .rv-back-sources-list {
   list-style: none;
-  padding: 6px 0 2px 0;
+  padding: 4px 0 0 0;
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 4px;
   overflow: hidden;
 }
 #reviews .rv-back-source-item {
@@ -905,12 +911,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 5px;
-  font-size: 10.5px;
-  line-height: 1.25;
-  padding: 5px 8px;
+  gap: 4px;
+  font-size: 10px;
+  line-height: 1.2;
+  padding: 4px 6px;
   background: rgba(0, 0, 0, 0.04);
-  border-radius: 5px;
+  border-radius: 4px;
   color: var(--color-2);
   text-decoration: none;
   transition: all 0.2s;
@@ -918,20 +924,19 @@
 #reviews .rv-back-source-link:hover {
   background: rgba(0, 0, 0, 0.08);
   color: var(--color-6, #d12a1e);
-  transform: translateX(2px);
 }
 #reviews .rv-back-source-icon {
   flex-shrink: 0;
   color: var(--color-4);
 }
 #reviews .rv-back-source-empty {
-  font-size: 10px;
+  font-size: 9.5px;
   color: var(--color-4);
   font-style: italic;
-  padding: 3px 0;
+  padding: 2px 0;
 }
 
-/* Colonna destra espansa: Dossier Completo Intelligence */
+/* Colonna destra: Scroll container compatto */
 #reviews .rv-back-col-right {
   display: flex;
   flex-direction: column;
@@ -939,279 +944,324 @@
   min-height: 0;
   overflow: hidden;
 }
-#reviews .rv-back-nav-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-bottom: 12px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--color-8, rgba(0, 0, 0, 0.08));
-}
-#reviews .rv-back-nav-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 12px;
-  border-radius: var(--radius-1);
-  font-size: 11px;
-  font-weight: 600;
-  background: rgba(0, 0, 0, 0.035);
-  color: var(--color-2);
-  border: 1px solid var(--color-8, rgba(0, 0, 0, 0.12));
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
-}
-#reviews .rv-back-nav-pill:hover {
-  background: rgba(0, 0, 0, 0.08);
-  border-color: var(--color-2);
-  transform: translateY(-1px);
-}
-#reviews .rv-back-nav-pill.is-active {
-  background: var(--color-2);
-  color: var(--color-1);
-  border-color: var(--color-2);
-}
-
 #reviews .rv-back-right-scroll-container {
   overflow-y: auto;
-  max-height: calc(74vh - 110px);
-  padding-right: 12px;
+  max-height: 100%;
+  padding-right: 8px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  scroll-behavior: smooth;
+  gap: 10px;
 }
 #reviews .rv-back-right-scroll-container::-webkit-scrollbar {
-  width: 5px;
+  width: 4px;
 }
 #reviews .rv-back-right-scroll-container::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.03);
-  border-radius: 4px;
+  background: transparent;
 }
 #reviews .rv-back-right-scroll-container::-webkit-scrollbar-thumb {
-  background: var(--color-8, rgba(0, 0, 0, 0.2));
+  background: var(--color-8, rgba(0, 0, 0, 0.16));
   border-radius: 4px;
 }
 #reviews .rv-back-right-scroll-container::-webkit-scrollbar-thumb:hover {
   background: var(--color-4, #6b6b6b);
 }
 
-/* Dossier Cards */
-#reviews .rv-dossier-card {
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--color-8, rgba(0, 0, 0, 0.09));
-  border-radius: 12px;
-  padding: clamp(14px, 1.8vw, 20px);
+/* Pannelli minimali (sfondo naturale della tessera, bordi sottili) */
+#reviews .rv-back-panel {
+  border: 1px solid var(--color-8, rgba(0, 0, 0, 0.12));
+  border-radius: 6px;
+  padding: 9px 12px;
+  background: rgba(0, 0, 0, 0.015);
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
-}
-#reviews .rv-dossier-card--featured {
-  border-color: rgba(59, 130, 246, 0.35);
-  box-shadow: 0 4px 18px -2px rgba(59, 130, 246, 0.07);
-}
-#reviews .rv-dossier-card__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-#reviews .rv-dossier-title {
-  font-family: var(--font-1);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--color-2);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-#reviews .rv-key-summary {
-  font-size: 13px;
-  line-height: 1.5;
-  color: var(--color-2);
+  gap: 7px;
 }
 
-/* CXI Matching Cards */
-#reviews .rv-cxi-solution-card {
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 10px;
-  padding: 15px 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 11px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
-}
-#reviews .rv-cxi-pill-primary {
-  border: 1px solid #93c5fd;
-  background: #eff6ff;
-  color: #1d4ed8;
-  font-size: 11px;
-  font-weight: 600;
-  padding: 2.5px 11px;
-  border-radius: 999px;
-}
-#reviews .rv-cxi-pill-secondary {
-  border: 1px solid #fed7aa;
-  background: #fff7ed;
-  color: #c2410c;
-  font-size: 11px;
-  font-weight: 600;
-  padding: 2.5px 11px;
-  border-radius: 999px;
-}
-#reviews .rv-cxi-pill-year {
-  border: 1px solid #e2e8f0;
-  background: #f8fafc;
-  color: #475569;
-  font-size: 10.5px;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 999px;
-}
-#reviews .rv-cxi-copy-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 12px;
-  border-radius: 6px;
-  border: 1px solid #cbd5e1;
-  background: #ffffff;
-  color: #1e293b;
-  font-size: 11.5px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-#reviews .rv-cxi-copy-btn:hover {
-  background: #f8fafc;
-  border-color: #94a3b8;
-  transform: translateY(-1px);
-}
-#reviews .rv-email-box {
-  background: #fafafc;
-  border: 1px solid #f1f5f9;
-  border-radius: 8px;
-  padding: 13px 15px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 4px;
-}
-#reviews .rv-email-box__tag {
+#reviews .rv-back-sec-title {
+  font-family: var(--font-1);
   font-size: 10px;
   font-weight: 700;
-  color: #64748b;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-}
-#reviews .rv-email-box__subject {
-  font-size: 12px;
-  color: #334155;
-  line-height: 1.4;
-}
-#reviews .rv-email-box__body {
-  font-size: 12px;
-  line-height: 1.55;
-  color: #334155;
+  color: var(--color-4);
+  margin: 0;
 }
 
-/* Persona Cards */
-#reviews .rv-persona-card {
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 10px;
-  padding: 13px 15px;
+/* RIGA 1: Info Chiave (Sinistra) + Scoring (Destra) side-by-side */
+#reviews .rv-back-top-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.32fr) minmax(0, 1.18fr);
+  gap: 9px;
+}
+
+#reviews .rv-back-panel--info {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 5px;
 }
-#reviews .rv-persona-tag {
-  border: 1px solid #e2e8f0;
-  background: #f8fafc;
-  color: #334155;
+#reviews .rv-back-info-summary {
+  font-size: 10.5px;
+  line-height: 1.4;
+  color: var(--color-2);
+  margin: 0;
+}
+#reviews .rv-back-info-subgrid {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5px;
   font-size: 10px;
-  font-weight: 600;
-  padding: 2px 7px;
-  border-radius: 4px;
+  line-height: 1.3;
+  color: var(--color-4);
+  border-top: 1px solid var(--color-8, rgba(0, 0, 0, 0.08));
+  padding-top: 4px;
+}
+#reviews .rv-back-info-tag {
+  font-weight: 700;
+  color: var(--color-2);
 }
 
-/* Scoring Grid */
-#reviews .rv-scoring-grid {
+/* Scoring Strip in Riga 1 */
+#reviews .rv-back-panel--scoring {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+#reviews .rv-scoring-strip {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
+  gap: 5px;
 }
-#reviews .rv-scoring-box {
-  border-radius: 10px;
-  padding: 10px 12px;
+#reviews .rv-scoring-cell {
+  border: 1px solid var(--color-8, rgba(0, 0, 0, 0.1));
+  border-radius: 4px;
+  padding: 4px 5px;
   text-align: center;
+  background: rgba(0, 0, 0, 0.01);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
 }
-#reviews .rv-scoring-box--main {
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.09);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
-}
-#reviews .rv-scoring-box--minor {
-  background: #fafafa;
-  border: 1px dashed rgba(0, 0, 0, 0.1);
-  opacity: 0.85;
-}
-#reviews .rv-scoring-box--total {
-  background: #f8fafc;
-  border: 2px solid var(--color-2);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-}
-#reviews .rv-scoring-label {
-  font-size: 10.5px;
+#reviews .rv-scoring-cell__label {
+  font-size: 8.5px;
   font-weight: 600;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
+  color: var(--color-4);
+  white-space: nowrap;
 }
-#reviews .rv-scoring-val {
-  font-size: 24px;
+#reviews .rv-scoring-cell__val {
+  font-size: 14.5px;
   font-weight: 700;
   line-height: 1.1;
-  margin: 3px 0 1px;
+  margin: 1px 0;
   color: var(--color-2);
 }
-#reviews .rv-scoring-sub {
+#reviews .rv-scoring-cell__sub {
+  font-size: 8.5px;
+  color: var(--color-4);
+}
+#reviews .rv-scoring-cell--minor {
+  border-style: dashed;
+  opacity: 0.8;
+}
+#reviews .rv-scoring-cell--total {
+  border: 1.5px solid var(--color-2);
+  background: rgba(0, 0, 0, 0.03);
+}
+#reviews .rv-scoring-note {
+  font-size: 9px;
+  line-height: 1.3;
+  color: var(--color-4);
+  margin: 0;
+  border-top: 1px solid var(--color-8, rgba(0, 0, 0, 0.08));
+  padding-top: 4px;
+}
+
+/* RIGA 2: CXI Matching */
+#reviews .rv-back-panel--cxi {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+#reviews .rv-cxi-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+#reviews .rv-cxi-block--secondary {
+  border-top: 1px solid var(--color-8, rgba(0, 0, 0, 0.1));
+  padding-top: 7px;
+}
+#reviews .rv-cxi-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+#reviews .rv-cxi-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: var(--radius-1);
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+#reviews .rv-cxi-badge--primary {
+  border: 1px solid var(--color-2);
+  background: var(--color-2);
+  color: var(--color-1);
+}
+#reviews .rv-cxi-badge--secondary {
+  border: 1px solid var(--color-2);
+  background: transparent;
+  color: var(--color-2);
+}
+#reviews .rv-cxi-badge--year {
+  border: 1px solid var(--color-8, rgba(0, 0, 0, 0.18));
+  background: transparent;
+  color: var(--color-4);
+  font-size: 9.5px;
+}
+#reviews .rv-cxi-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 9px;
+  border-radius: var(--radius-1);
+  border: 1px solid var(--color-2);
+  background: transparent;
+  color: var(--color-2);
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+#reviews .rv-cxi-copy-btn:hover {
+  background: var(--color-2);
+  color: var(--color-1);
+}
+#reviews .rv-cxi-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5px;
   font-size: 10.5px;
-  font-weight: 500;
-  color: #64748b;
+  line-height: 1.35;
+  color: var(--color-2);
+}
+#reviews .rv-cxi-details strong {
+  font-weight: 600;
+  color: var(--color-2);
+}
+
+/* Gancio Mail Dedicato */
+#reviews .rv-email-block {
+  border: 1px solid var(--color-8, rgba(0, 0, 0, 0.12));
+  border-radius: 4px;
+  padding: 8px 10px;
+  background: rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 2px;
+}
+#reviews .rv-email-block__header {
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-4);
+}
+#reviews .rv-email-block__subject {
+  font-size: 10px;
+  color: var(--color-2);
+  line-height: 1.3;
+}
+#reviews .rv-email-block__body {
+  font-size: 10px;
+  line-height: 1.4;
+  color: var(--color-2);
+}
+
+/* RIGA 3: Buyer Personas (2 Colonne affiancate) */
+#reviews .rv-back-panel--personas {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+#reviews .rv-personas-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+}
+#reviews .rv-persona-box {
+  border: 1px solid var(--color-8, rgba(0, 0, 0, 0.1));
+  border-radius: 4px;
+  padding: 7px 9px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.01);
+}
+#reviews .rv-persona-head {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+#reviews .rv-persona-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 4px;
+  border-radius: 3px;
+  border: 1px solid var(--color-8, rgba(0, 0, 0, 0.15));
+  font-size: 8.5px;
+  font-weight: 600;
+  color: var(--color-4);
+}
+#reviews .rv-persona-title {
+  font-family: var(--font-1);
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--color-2);
+  margin: 0;
+}
+#reviews .rv-persona-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5px;
+  font-size: 9.5px;
+  line-height: 1.3;
+  color: var(--color-2);
+}
+#reviews .rv-persona-lines strong {
+  font-weight: 600;
+  color: var(--color-2);
 }
 
 #reviews .rv-who { display: flex; flex-wrap: wrap; gap: 4px 18px; }
 #reviews .rv-who span + span { color: var(--color-4); }
 @media (max-width: 820px) {
   #reviews .rv-stack { margin-left: var(--space-1); }
-  #reviews .rv-sheet { top: calc(80px + var(--i, 0) * 12px); min-height: 60vh; margin-bottom: 14vh; }
-  #reviews .rv-flip-card { min-height: 60vh; }
-  #reviews .rv-card-face { min-height: 60vh; padding: 20px; }
+  #reviews .rv-sheet { top: calc(80px + var(--i, 0) * 12px); min-height: 56vh; height: 56vh; max-height: 56vh; margin-bottom: 14vh; }
+  #reviews .rv-flip-card { min-height: 56vh; height: 56vh; max-height: 56vh; }
+  #reviews .rv-card-face { min-height: 56vh; height: 56vh; max-height: 56vh; padding: 16px; }
   #reviews .rv-back-body {
     grid-template-columns: 1fr;
-    gap: 24px;
+    gap: 14px;
     overflow-y: auto;
-    max-height: 65vh;
   }
   #reviews .rv-back-col-left {
     padding-right: 0;
     border-right: none;
     border-bottom: 1px solid var(--color-8, rgba(0, 0, 0, 0.12));
-    padding-bottom: 20px;
+    padding-bottom: 12px;
   }
-  #reviews .rv-back-grid-placeholders {
+  #reviews .rv-back-top-row {
+    grid-template-columns: 1fr;
+  }
+  #reviews .rv-personas-grid {
     grid-template-columns: 1fr;
   }
   #reviews .rv-bottom-bar {

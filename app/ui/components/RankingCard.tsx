@@ -10,15 +10,8 @@ import {
   MapPin,
   Phone,
   Globe,
-  Sparkles,
-  Building2,
-  Users,
-  Scale,
   Copy,
   Check,
-  Target,
-  MessageSquare,
-  Info,
 } from "lucide-react";
 import CountAnimation from "./CountAnimation";
 import TypingEffect from "./TypingEffect";
@@ -66,16 +59,10 @@ export default function RankingCard({
   const [isSourcesOpen, setIsSourcesOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
 
-  // Sezioni per lo scroll rapido nel retro della scheda
-  const secInfoRef = useRef<HTMLDivElement>(null);
-  const secCxiRef = useRef<HTMLDivElement>(null);
-  const secPersonasRef = useRef<HTMLDivElement>(null);
-  const secScoringRef = useRef<HTMLDivElement>(null);
-
   const isOutOfRanking = company.rank > targetRankedCount;
   const surfaceClass = index % 2 === 0 ? "m-surface" : "m-surface-2";
 
-  // Ottiene il dossier approfondito di intelligence per questa azienda
+  // Dossier di intelligence per l'azienda
   const dossier = company.dossier || getCompanyDossier(company);
 
   const handleCopyEmail = (e: React.MouseEvent) => {
@@ -84,7 +71,7 @@ export default function RankingCard({
     if (typeof navigator !== "undefined" && navigator.clipboard) {
       navigator.clipboard.writeText(textToCopy);
       setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 2400);
+      setTimeout(() => setIsCopied(false), 2200);
     }
   };
 
@@ -173,14 +160,14 @@ export default function RankingCard({
               title="Approfondisci dettagli azienda"
             >
               <span className="rv-deep-dive-btn__label">Approfondisci</span>
-              <ArrowRight size={16} className="rv-deep-dive-btn__arrow" />
+              <ArrowRight size={15} className="rv-deep-dive-btn__arrow" />
             </button>
           </div>
         </div>
 
         {/* ==================== RETRO SCHEDA ==================== */}
         <div className={`rv-card-face rv-card-face--back ${surfaceClass}`}>
-          {/* Header superiore: Nome azienda in piccolo + Torna alla scheda */}
+          {/* Header superiore minimale: Badge rank + Nome azienda in piccolo + Torna alla scheda */}
           <div className="rv-back-header">
             <div className="rv-back-header-left">
               <span className="rv-back-badge">#{company.rank}</span>
@@ -197,11 +184,11 @@ export default function RankingCard({
             </button>
           </div>
 
-          {/* Body: Colonna sinistra ultra-compatta + Colonna destra espansa */}
+          {/* Body: Colonna sinistra compatta + Area destra minimizzata */}
           <div className="rv-back-body">
-            {/* ----------------- COLONNA SINISTRA (Compatta) ----------------- */}
+            {/* ----------------- COLONNA SINISTRA (Compatta e minimale) ----------------- */}
             <aside className="rv-back-col-left">
-              {/* 1. Fatturato (immediato) */}
+              {/* 1. Fatturato */}
               <div className="rv-back-field">
                 <span className="rv-back-field__label">Fatturato</span>
                 <span className="rv-back-field__val rv-back-field__val--strong">
@@ -211,7 +198,7 @@ export default function RankingCard({
                 </span>
               </div>
 
-              {/* 2. Dipendenti (immediato) */}
+              {/* 2. Dipendenti */}
               <div className="rv-back-field">
                 <span className="rv-back-field__label">Dipendenti</span>
                 <span className="rv-back-field__val rv-back-field__val--strong">
@@ -227,19 +214,19 @@ export default function RankingCard({
                 <span className="rv-back-field__val">{company.cluster}</span>
               </div>
 
-              {/* 4. Sottosettore (subito sotto il settore) */}
+              {/* 4. Sottosettore (subito sotto settore) */}
               <div className="rv-back-field">
                 <span className="rv-back-field__label">Sottosettore</span>
-                <span className="rv-back-field__val text-xs leading-snug">
+                <span className="rv-back-field__val text-[11px] leading-tight">
                   {company.subcategory}
                 </span>
               </div>
 
               {/* 5. Sede (Indirizzo preciso) */}
               <div className="rv-back-field">
-                <span className="rv-back-field__label">Sede (Indirizzo)</span>
+                <span className="rv-back-field__label">Sede</span>
                 <div className="rv-back-field__row">
-                  <MapPin size={12} className="rv-back-field-icon" />
+                  <MapPin size={11} className="rv-back-field-icon" />
                   <span className="rv-back-field__text">
                     {company.fullAddress ||
                       company.headquartersCity ||
@@ -260,7 +247,7 @@ export default function RankingCard({
                   className="rv-back-field__link"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <Phone size={12} className="rv-back-field-icon" />
+                  <Phone size={11} className="rv-back-field-icon" />
                   <span>{company.phone || "+39 02 0000000"}</span>
                 </a>
               </div>
@@ -275,15 +262,15 @@ export default function RankingCard({
                   className="rv-back-field__link"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <Globe size={12} className="rv-back-field-icon" />
+                  <Globe size={11} className="rv-back-field-icon" />
                   <span className="rv-back-field__url">
                     {company.website?.replace(/^https?:\/\//, "") || "azienda.it"}
                   </span>
                 </a>
               </div>
 
-              {/* 8. Fonti (la voce più in basso nella colonna sinistra!) */}
-              <div className="rv-back-field rv-back-sources-box mt-auto pt-2 border-t border-[var(--color-8)]">
+              {/* 8. Fonti (la voce più in basso nella colonna sinistra) */}
+              <div className="rv-back-field rv-back-sources-box">
                 <button
                   type="button"
                   className="rv-back-sources-toggle"
@@ -297,7 +284,7 @@ export default function RankingCard({
                     {company.sources?.length || 3}
                   </span>
                   <ChevronDown
-                    size={13}
+                    size={11}
                     className={`rv-back-sources-chevron ${
                       isSourcesOpen ? "is-open" : ""
                     }`}
@@ -310,7 +297,7 @@ export default function RankingCard({
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
                       exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.22, ease: "easeOut" }}
+                      transition={{ duration: 0.2, ease: "easeOut" }}
                       className="rv-back-sources-list"
                     >
                       {company.sources && company.sources.length > 0 ? (
@@ -335,7 +322,7 @@ export default function RankingCard({
                         ))
                       ) : (
                         <li className="rv-back-source-empty">
-                          Registro Imprese C.C.I.A.A. verificato
+                          Registro Imprese verificato
                         </li>
                       )}
                     </motion.ul>
@@ -344,119 +331,110 @@ export default function RankingCard({
               </div>
             </aside>
 
-            {/* ----------------- COLONNA DESTRA (Dossier Completo) ----------------- */}
+            {/* ----------------- COLONNA DESTRA (Ottimizzata e Minimale) ----------------- */}
             <section className="rv-back-col-right">
-              {/* Barra di Navigazione Rapida con Anchor Pills */}
-              <div className="rv-back-nav-bar">
-                <button
-                  type="button"
-                  className="rv-back-nav-pill"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    secInfoRef.current?.scrollIntoView({
-                      behavior: "smooth",
-                      block: "nearest",
-                    });
-                  }}
-                >
-                  <Building2 size={12} />
-                  <span>Info Chiave</span>
-                </button>
-                <button
-                  type="button"
-                  className="rv-back-nav-pill is-active"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    secCxiRef.current?.scrollIntoView({
-                      behavior: "smooth",
-                      block: "nearest",
-                    });
-                  }}
-                >
-                  <Sparkles size={12} className="text-amber-500" />
-                  <span>Servizi CXI</span>
-                </button>
-                <button
-                  type="button"
-                  className="rv-back-nav-pill"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    secPersonasRef.current?.scrollIntoView({
-                      behavior: "smooth",
-                      block: "nearest",
-                    });
-                  }}
-                >
-                  <Users size={12} />
-                  <span>Buyer Personas</span>
-                </button>
-                <button
-                  type="button"
-                  className="rv-back-nav-pill"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    secScoringRef.current?.scrollIntoView({
-                      behavior: "smooth",
-                      block: "nearest",
-                    });
-                  }}
-                >
-                  <Scale size={12} />
-                  <span>Scoring</span>
-                </button>
-              </div>
-
-              {/* Feed Scorrevole dei Contenuti di Intelligence */}
               <div className="rv-back-right-scroll-container">
-                {/* 1. INFORMAZIONI CHIAVE SULL'AZIENDA */}
-                <div ref={secInfoRef} className="rv-dossier-card">
-                  <div className="rv-dossier-card__header">
-                    <div className="rv-dossier-title">
-                      <Building2 size={15} className="text-[var(--color-2)]" />
-                      <span>INFORMAZIONI CHIAVE SULL&apos;AZIENDA</span>
+                {/* RIGA 1: Informazioni Chiave (Sinistra) + Metodo di Scoring (Destra) side-by-side! */}
+                <div className="rv-back-top-row">
+                  {/* Informazioni Chiave sull'Azienda (~56% larghezza) */}
+                  <div className="rv-back-panel rv-back-panel--info">
+                    <h5 className="rv-back-sec-title">
+                      INFORMAZIONI CHIAVE SULL&apos;AZIENDA
+                    </h5>
+                    <p className="rv-back-info-summary">
+                      {dossier.keyInfo.summary}
+                    </p>
+                    <div className="rv-back-info-subgrid">
+                      <div>
+                        <span className="rv-back-info-tag">Core Business: </span>
+                        <span>{dossier.keyInfo.coreBusiness}</span>
+                      </div>
+                      <div>
+                        <span className="rv-back-info-tag">Mercati: </span>
+                        <span>{dossier.keyInfo.markets}</span>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-3 text-[13px] leading-relaxed text-[var(--color-2)]">
-                    <p className="rv-key-summary">{dossier.keyInfo.summary}</p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 border-t border-[var(--color-8)]/60 text-xs">
-                      <div>
-                        <span className="font-bold text-[var(--color-4)] uppercase tracking-wider block mb-1">
-                          Core Business & Servitizzazione
+                  {/* Breakdown Metodo di Scoring (~44% larghezza, compatto, senza malus nel titolo!) */}
+                  <div className="rv-back-panel rv-back-panel--scoring">
+                    <h5 className="rv-back-sec-title">
+                      BREAKDOWN METODO DI SCORING
+                    </h5>
+                    <div className="rv-scoring-strip">
+                      {/* Fit Target (25%) */}
+                      <div className="rv-scoring-cell">
+                        <span className="rv-scoring-cell__label">
+                          Fit (25%)
                         </span>
-                        <p>{dossier.keyInfo.coreBusiness}</p>
+                        <div className="rv-scoring-cell__val">
+                          {dossier.scoringBreakdown.fitTargetScore.toFixed(1)}
+                        </div>
+                        <span className="rv-scoring-cell__sub">
+                          {dossier.scoringBreakdown.fitTargetWeighted}
+                        </span>
                       </div>
-                      <div>
-                        <span className="font-bold text-[var(--color-4)] uppercase tracking-wider block mb-1">
-                          Presidio Territoriale & Mercati
+
+                      {/* Potenza Trigger (75%) */}
+                      <div className="rv-scoring-cell">
+                        <span className="rv-scoring-cell__label">
+                          Trigger (75%)
                         </span>
-                        <p>{dossier.keyInfo.markets}</p>
+                        <div className="rv-scoring-cell__val">
+                          {dossier.scoringBreakdown.potenzaTriggerScore.toFixed(1)}
+                        </div>
+                        <span className="rv-scoring-cell__sub">
+                          {dossier.scoringBreakdown.potenzaTriggerWeighted}
+                        </span>
+                      </div>
+
+                      {/* Malus Persona (discreto / meno peso visivo) */}
+                      <div className="rv-scoring-cell rv-scoring-cell--minor">
+                        <span className="rv-scoring-cell__label text-[9.5px]">
+                          Malus Persona
+                        </span>
+                        <div className="rv-scoring-cell__val text-[14px] text-rose-500 font-medium">
+                          {dossier.scoringBreakdown.malusPersona.toFixed(2)}
+                        </div>
+                        <span className="rv-scoring-cell__sub text-[9.5px]">
+                          {dossier.scoringBreakdown.malusPersonaMax || "max -0.50"}
+                        </span>
+                      </div>
+
+                      {/* Totale (in evidenza) */}
+                      <div className="rv-scoring-cell rv-scoring-cell--total">
+                        <span className="rv-scoring-cell__label font-bold text-[var(--color-2)]">
+                          Totale
+                        </span>
+                        <div className="rv-scoring-cell__val text-[18px] font-bold text-[var(--color-2)]">
+                          {dossier.scoringBreakdown.totalScore.toFixed(1)}
+                        </div>
+                        <span className="rv-scoring-cell__sub font-medium text-[var(--color-2)]">
+                          / 10
+                        </span>
                       </div>
                     </div>
+                    <p className="rv-scoring-note">
+                      Score {dossier.scoringBreakdown.totalScore.toFixed(1)}/10 = 25% Fit Target + 75% Trigger con 2 Buyer Personas complete. Aderenza ottimale ai criteri dimensionali e territoriali.
+                    </p>
                   </div>
                 </div>
 
-                {/* 2. DOPPIO MATCHING SERVIZI CXI PERTINENTI (Sezione Principale) */}
-                <div
-                  ref={secCxiRef}
-                  className="rv-dossier-card rv-dossier-card--featured"
-                >
-                  <div className="rv-dossier-card__header">
-                    <div className="rv-dossier-title">
-                      <Sparkles size={16} className="text-amber-500 fill-amber-500/20" />
-                      <span>DOPPIO MATCHING SERVIZI CXI PERTINENTI</span>
-                    </div>
-                  </div>
+                {/* RIGA 2: DOPPIO MATCHING SERVIZI CXI PERTINENTI (Sezione Principale) */}
+                <div className="rv-back-panel rv-back-panel--cxi">
+                  <h5 className="rv-back-sec-title">
+                    DOPPIO MATCHING SERVIZI CXI PERTINENTI
+                  </h5>
 
                   {/* Soluzione Principale */}
-                  <div className="rv-cxi-solution-card">
-                    <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="rv-cxi-block">
+                    <div className="rv-cxi-head">
                       <div className="flex items-center gap-2">
-                        <span className="rv-cxi-pill-primary">
+                        <span className="rv-cxi-badge rv-cxi-badge--primary">
                           Soluzione Principale: {dossier.cxiPrimary.name}
                         </span>
                         {dossier.cxiPrimary.year && (
-                          <span className="rv-cxi-pill-year">
+                          <span className="rv-cxi-badge rv-cxi-badge--year">
                             {dossier.cxiPrimary.year}
                           </span>
                         )}
@@ -466,204 +444,103 @@ export default function RankingCard({
                         type="button"
                         className="rv-cxi-copy-btn"
                         onClick={handleCopyEmail}
-                        title="Copia l'intero gancio mail negli appunti"
+                        title="Copia l'intero gancio mail"
                       >
                         {isCopied ? (
                           <>
-                            <Check size={13} className="text-emerald-600" />
+                            <Check size={12} className="text-emerald-600" />
                             <span className="text-emerald-700 font-semibold">
-                              Gancio Copiato!
+                              Copiato!
                             </span>
                           </>
                         ) : (
                           <>
-                            <Copy size={13} />
+                            <Copy size={12} />
                             <span>Copia Gancio Mail</span>
                           </>
                         )}
                       </button>
                     </div>
 
-                    <div className="flex flex-col gap-2 text-[13px] leading-relaxed">
+                    <div className="rv-cxi-details">
                       <p>
-                        <strong className="font-semibold text-[var(--color-2)]">
-                          Servizio su misura (1 riga):{" "}
-                        </strong>
+                        <strong>Servizio su misura (1 riga): </strong>
                         {dossier.cxiPrimary.tailoredService}
                       </p>
                       <p>
-                        <strong className="font-semibold text-[var(--color-2)]">
-                          Aggancio al fatto (Trigger):{" "}
-                        </strong>
+                        <strong>Aggancio al fatto (Trigger): </strong>
                         {dossier.cxiPrimary.trigger}
                       </p>
                     </div>
 
-                    {/* Nested Gancio Mail Dedicato */}
-                    <div className="rv-email-box">
-                      <div className="rv-email-box__tag">
+                    {/* Box Gancio Mail Dedicato */}
+                    <div className="rv-email-block">
+                      <div className="rv-email-block__header">
                         GANCIO MAIL (DEDICATO ALLA SOLUZIONE CXI PRINCIPALE)
                       </div>
-                      <div className="rv-email-box__subject">
-                        <strong className="text-[var(--color-2)]">
-                          Oggetto:{" "}
-                        </strong>
+                      <div className="rv-email-block__subject">
+                        <strong>Oggetto: </strong>
                         {dossier.cxiPrimary.emailHook.subject}
                       </div>
-                      <div className="rv-email-box__body whitespace-pre-line">
+                      <div className="rv-email-block__body whitespace-pre-line">
                         {dossier.cxiPrimary.emailHook.body}
                       </div>
                     </div>
                   </div>
 
                   {/* Soluzione Secondaria */}
-                  <div className="rv-cxi-solution-card">
-                    <div className="flex items-center gap-2">
-                      <span className="rv-cxi-pill-secondary">
+                  <div className="rv-cxi-block rv-cxi-block--secondary">
+                    <div className="rv-cxi-head">
+                      <span className="rv-cxi-badge rv-cxi-badge--secondary">
                         Soluzione Secondaria: {dossier.cxiSecondary.name}
                       </span>
                     </div>
 
-                    <div className="flex flex-col gap-2 text-[13px] leading-relaxed">
+                    <div className="rv-cxi-details">
                       <p>
-                        <strong className="font-semibold text-[var(--color-2)]">
-                          Servizio su misura (1 riga):{" "}
-                        </strong>
+                        <strong>Servizio su misura (1 riga): </strong>
                         {dossier.cxiSecondary.tailoredService}
                       </p>
                       <p>
-                        <strong className="font-semibold text-[var(--color-2)]">
-                          Trigger / Esigenza:{" "}
-                        </strong>
+                        <strong>Trigger / Esigenza: </strong>
                         {dossier.cxiSecondary.trigger}
                       </p>
                     </div>
                   </div>
                 </div>
 
-                {/* 3. INTERLOCUTORI & 2 BUYER PERSONAS TARGET */}
-                <div ref={secPersonasRef} className="rv-dossier-card">
-                  <div className="rv-dossier-card__header">
-                    <div className="rv-dossier-title">
-                      <Users size={15} className="text-[var(--color-2)]" />
-                      <span>INTERLOCUTORI & 2 BUYER PERSONAS TARGET</span>
-                    </div>
-                  </div>
+                {/* RIGA 3: INTERLOCUTORI & 2 BUYER PERSONAS TARGET (2 Colonne affiancate) */}
+                <div className="rv-back-panel rv-back-panel--personas">
+                  <h5 className="rv-back-sec-title">
+                    INTERLOCUTORI & 2 BUYER PERSONAS TARGET
+                  </h5>
 
-                  <div className="flex flex-col gap-3">
+                  <div className="rv-personas-grid">
                     {dossier.buyerPersonas.map((persona, pIdx) => (
-                      <div key={pIdx} className="rv-persona-card">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="rv-persona-tag">
+                      <div key={pIdx} className="rv-persona-box">
+                        <div className="rv-persona-head">
+                          <span className="rv-persona-badge">
                             Figura #{persona.figureNumber}
                           </span>
-                          <h5 className="font-bold text-[14px] text-[var(--color-2)]">
-                            {persona.role}
-                          </h5>
+                          <h6 className="rv-persona-title">{persona.role}</h6>
                         </div>
 
-                        <div className="flex flex-col gap-1.5 text-[12.5px] leading-relaxed">
+                        <div className="rv-persona-lines">
                           <p>
-                            <strong className="font-semibold text-[var(--color-2)]">
-                              Livello / Peso Decisionale:{" "}
-                            </strong>
+                            <strong>Livello / Peso Decisionale: </strong>
                             {persona.decisionLevel}
                           </p>
-                          <p className="flex items-start gap-1.5">
-                            <span className="text-amber-500 font-bold shrink-0">
-                              🎯
-                            </span>
-                            <span>
-                              <strong className="font-semibold text-[var(--color-2)]">
-                                Cosa gli interessa:{" "}
-                              </strong>
-                              {persona.interests}
-                            </span>
+                          <p>
+                            <strong>Cosa gli interessa: </strong>
+                            {persona.interests}
                           </p>
-                          <p className="flex items-start gap-1.5">
-                            <span className="text-sky-500 font-bold shrink-0">
-                              💭
-                            </span>
-                            <span>
-                              <strong className="font-semibold text-[var(--color-2)]">
-                                Primo messaggio utile (Angolo d&apos;attacco):{" "}
-                              </strong>
-                              {persona.firstMessageAngle}
-                            </span>
+                          <p>
+                            <strong>Primo messaggio utile (Angolo d&apos;attacco): </strong>
+                            {persona.firstMessageAngle}
                           </p>
                         </div>
                       </div>
                     ))}
-                  </div>
-                </div>
-
-                {/* 4. BREAKDOWN METODO DI SCORING (senza malus persona nel titolo!) */}
-                <div ref={secScoringRef} className="rv-dossier-card">
-                  <div className="rv-dossier-card__header">
-                    <div className="rv-dossier-title">
-                      <Scale size={15} className="text-[var(--color-2)]" />
-                      <span>BREAKDOWN METODO DI SCORING</span>
-                    </div>
-                  </div>
-
-                  {/* Grid 4 tessere scoring: Fit Target e Potenza Trigger in risalto, Malus Persona discreto */}
-                  <div className="rv-scoring-grid">
-                    {/* Box 1: Fit Target (25%) */}
-                    <div className="rv-scoring-box rv-scoring-box--main">
-                      <span className="rv-scoring-label">Fit Target (25%)</span>
-                      <div className="rv-scoring-val">
-                        {dossier.scoringBreakdown.fitTargetScore.toFixed(1)}
-                      </div>
-                      <span className="rv-scoring-sub">
-                        {dossier.scoringBreakdown.fitTargetWeighted}
-                      </span>
-                    </div>
-
-                    {/* Box 2: Potenza Trigger (75%) */}
-                    <div className="rv-scoring-box rv-scoring-box--main">
-                      <span className="rv-scoring-label">
-                        Potenza Trigger (75%)
-                      </span>
-                      <div className="rv-scoring-val">
-                        {dossier.scoringBreakdown.potenzaTriggerScore.toFixed(1)}
-                      </div>
-                      <span className="rv-scoring-sub">
-                        {dossier.scoringBreakdown.potenzaTriggerWeighted}
-                      </span>
-                    </div>
-
-                    {/* Box 3: Malus Persona (visivamente più discreto/meno peso) */}
-                    <div className="rv-scoring-box rv-scoring-box--minor">
-                      <span className="rv-scoring-label text-[10.5px]">
-                        Malus Persona
-                      </span>
-                      <div className="rv-scoring-val text-[19px] font-semibold text-rose-500/80">
-                        {dossier.scoringBreakdown.malusPersona.toFixed(2)}
-                      </div>
-                      <span className="rv-scoring-sub text-[10px]">
-                        {dossier.scoringBreakdown.malusPersonaMax || "max -0.50"}
-                      </span>
-                    </div>
-
-                    {/* Box 4: Totale (in risalto) */}
-                    <div className="rv-scoring-box rv-scoring-box--total">
-                      <span className="rv-scoring-label font-bold text-[var(--color-2)]">
-                        Totale
-                      </span>
-                      <div className="rv-scoring-val text-[26px] font-black text-[var(--color-2)]">
-                        {dossier.scoringBreakdown.totalScore.toFixed(1)}
-                      </div>
-                      <span className="rv-scoring-sub font-semibold text-[var(--color-2)]">
-                        su 10.0
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col gap-2 pt-2 border-t border-[var(--color-8)]/60 text-[12px] leading-relaxed text-[var(--color-4)]">
-                    <p className="font-semibold text-[var(--color-2)]">
-                      {dossier.scoringBreakdown.formulaExplanation}
-                    </p>
-                    <p>{dossier.scoringBreakdown.summaryNote}</p>
                   </div>
                 </div>
               </div>
