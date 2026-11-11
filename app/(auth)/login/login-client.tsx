@@ -721,11 +721,11 @@ export function LoginClient({
 
       {/*
         3. COMPONENTE PASSWORD LIQUID GLASS (z-20):
-        - Spostato più in basso (top-[68vh] -translate-y-1/2, dove prima appariva il messaggio d'errore).
+        - Alzato di ulteriori 5px (totale 10px rispetto alla baseline: top-[calc(68vh-10px)] -translate-y-1/2).
         - Compare con effetto sfumato veloce (duration-500) a t = 2500ms, esattamente mezzo secondo prima
           che la scritta 'SCOUTING AGENT' inizi a scendere (t = 3000ms).
       */}
-      <div className="pointer-events-none absolute inset-x-0 top-[68vh] -translate-y-1/2 z-20 flex justify-center px-4">
+      <div className="pointer-events-none absolute inset-x-0 top-[calc(68vh-10px)] -translate-y-1/2 z-20 flex justify-center px-4">
         <div
           ref={passwordBoxRef}
           onFocusCapture={handleContainerFocusCapture}

@@ -98,7 +98,18 @@ export function simulateCompanyHunterSearch(
 
   const baseCompaniesBySector: Record<
     string,
-    Array<{ name: string; cluster: string; subcategory: string; baseRev: number; baseEmp: number }>
+    Array<{
+      name: string;
+      cluster: string;
+      subcategory: string;
+      baseRev: number;
+      baseEmp: number;
+      headquartersCity: string;
+      fullAddress: string;
+      phone: string;
+      website: string;
+      sources: Array<{ title: string; url: string }>;
+    }>
   > = {
     "SaaS & Digital Tech": [
       {
@@ -107,6 +118,15 @@ export function simulateCompanyHunterSearch(
         subcategory: "Enterprise SaaS Platforms",
         baseRev: 14200000,
         baseEmp: 98,
+        headquartersCity: "Milano (MI)",
+        fullAddress: "Via Filippo Turati 29, 20121 Milano (MI)",
+        phone: "+39 02 3658 9100",
+        website: "https://www.nexuracloud.it",
+        sources: [
+          { title: "Registro Imprese — C.C.I.A.A. Milano Monza Brianza", url: "https://www.registroimprese.it" },
+          { title: "ReportAziende — Bilancio depositato esercizio 2024", url: "https://www.reportaziende.it" },
+          { title: "Google Maps Places — Sede operativa verificata", url: "https://maps.google.com" },
+        ],
       },
       {
         name: "Omnia Data Systems S.r.l.",
@@ -114,6 +134,15 @@ export function simulateCompanyHunterSearch(
         subcategory: "Predictive Analytics B2B",
         baseRev: 8750000,
         baseEmp: 62,
+        headquartersCity: "Torino (TO)",
+        fullAddress: "Corso Castelfidardo 30/A, 10128 Torino (TO)",
+        phone: "+39 011 564 7890",
+        website: "https://www.omniadata.it",
+        sources: [
+          { title: "Registro Imprese — C.C.I.A.A. Torino", url: "https://www.registroimprese.it" },
+          { title: "FatturatoItalia — Report dimensionale e dipendenti", url: "https://www.fatturatoitalia.it" },
+          { title: "Google Maps Places — Uffici direzionali verificati", url: "https://maps.google.com" },
+        ],
       },
       {
         name: "Hyperion Cybersecurity S.p.A.",
@@ -121,6 +150,15 @@ export function simulateCompanyHunterSearch(
         subcategory: "Zero Trust Protection",
         baseRev: 19400000,
         baseEmp: 135,
+        headquartersCity: "Roma (RM)",
+        fullAddress: "Via Laurentina 449, 00142 Roma (RM)",
+        phone: "+39 06 5929 1100",
+        website: "https://www.hyperionsec.it",
+        sources: [
+          { title: "Registro Imprese — C.C.I.A.A. Roma", url: "https://www.registroimprese.it" },
+          { title: "ReportAziende — Scheda economico-finanziaria", url: "https://www.reportaziende.it" },
+          { title: "Google Maps Places — Sede legale verificata", url: "https://maps.google.com" },
+        ],
       },
       {
         name: "Krypton Web Solutions S.r.l.",
@@ -128,6 +166,15 @@ export function simulateCompanyHunterSearch(
         subcategory: "E-Commerce & Omnichannel",
         baseRev: 6300000,
         baseEmp: 44,
+        headquartersCity: "Bologna (BO)",
+        fullAddress: "Via dell'Arcoveggio 49/5, 40129 Bologna (BO)",
+        phone: "+39 051 418 2300",
+        website: "https://www.kryptonweb.it",
+        sources: [
+          { title: "Registro Imprese — C.C.I.A.A. Bologna", url: "https://www.registroimprese.it" },
+          { title: "FatturatoItalia — Scheda sintetica camerale", url: "https://www.fatturatoitalia.it" },
+          { title: "Google Maps Places — Presenza fisica accertata", url: "https://maps.google.com" },
+        ],
       },
       {
         name: "Synapse IoT Automation S.p.A.",
@@ -135,6 +182,15 @@ export function simulateCompanyHunterSearch(
         subcategory: "Smart Factory Edge Computing",
         baseRev: 22800000,
         baseEmp: 160,
+        headquartersCity: "Milano (MI)",
+        fullAddress: "Via Tortona 31, 20144 Milano (MI)",
+        phone: "+39 02 8739 4410",
+        website: "https://www.synapseiot.it",
+        sources: [
+          { title: "Registro Imprese — C.C.I.A.A. Milano", url: "https://www.registroimprese.it" },
+          { title: "ReportAziende — Bilancio & Fatturato verificato", url: "https://www.reportaziende.it" },
+          { title: "Google Maps Places — Sede operativa verificata", url: "https://maps.google.com" },
+        ],
       },
     ],
     "Manifatturiero & Meccanica": [
@@ -144,6 +200,15 @@ export function simulateCompanyHunterSearch(
         subcategory: "Componenti aerospaziali & difesa",
         baseRev: 18900000,
         baseEmp: 142,
+        headquartersCity: "Torino (TO)",
+        fullAddress: "Corso Svizzera 185, 10149 Torino (TO)",
+        phone: "+39 011 749 6100",
+        website: "https://www.aeternaprecision.it",
+        sources: [
+          { title: "Registro Imprese — C.C.I.A.A. Torino", url: "https://www.registroimprese.it" },
+          { title: "ReportAziende — Bilancio depositato", url: "https://www.reportaziende.it" },
+          { title: "Google Maps Places — Stabilimento produttivo verificato", url: "https://maps.google.com" },
+        ],
       },
       {
         name: "Krono Automazioni Industriali S.p.A.",
@@ -151,6 +216,15 @@ export function simulateCompanyHunterSearch(
         subcategory: "Linee produttive robotizzate",
         baseRev: 12400000,
         baseEmp: 88,
+        headquartersCity: "Brescia (BS)",
+        fullAddress: "Via Crotte 28, 25127 Brescia (BS)",
+        phone: "+39 030 373 5500",
+        website: "https://www.kronoautomazioni.it",
+        sources: [
+          { title: "Registro Imprese — C.C.I.A.A. Brescia", url: "https://www.registroimprese.it" },
+          { title: "FatturatoItalia — Dati camerali 2024", url: "https://www.fatturatoitalia.it" },
+          { title: "Google Maps Places — Sede operativa verificata", url: "https://maps.google.com" },
+        ],
       },
       {
         name: "Officine Meccaniche Val Seriana S.r.l.",
@@ -158,6 +232,15 @@ export function simulateCompanyHunterSearch(
         subcategory: "Lavorazioni CNC ad alta precisione",
         baseRev: 7650000,
         baseEmp: 52,
+        headquartersCity: "Bergamo (BG)",
+        fullAddress: "Via Provinciale 42, 24022 Alzano Lombardo (BG)",
+        phone: "+39 035 512 8800",
+        website: "https://www.omvalseriana.it",
+        sources: [
+          { title: "Registro Imprese — C.C.I.A.A. Bergamo", url: "https://www.registroimprese.it" },
+          { title: "ReportAziende — Dati finanziari ufficiali", url: "https://www.reportaziende.it" },
+          { title: "Google Maps Places — Officina e stabilimento verificati", url: "https://maps.google.com" },
+        ],
       },
       {
         name: "Vanguard Tooling Tech S.p.A.",
@@ -165,6 +248,15 @@ export function simulateCompanyHunterSearch(
         subcategory: "Stampi industriali termoindurenti",
         baseRev: 15200000,
         baseEmp: 110,
+        headquartersCity: "Modena (MO)",
+        fullAddress: "Via Emilia Est 1020, 41122 Modena (MO)",
+        phone: "+39 059 284 7100",
+        website: "https://www.vanguardtooling.it",
+        sources: [
+          { title: "Registro Imprese — C.C.I.A.A. Modena", url: "https://www.registroimprese.it" },
+          { title: "ReportAziende — Bilancio economico verificato", url: "https://www.reportaziende.it" },
+          { title: "Google Maps Places — Stabilimento verificato", url: "https://maps.google.com" },
+        ],
       },
       {
         name: "Delta Flange & Raccordi S.r.l.",
@@ -172,6 +264,15 @@ export function simulateCompanyHunterSearch(
         subcategory: "Componenti idraulici per Oil&Gas",
         baseRev: 5400000,
         baseEmp: 36,
+        headquartersCity: "Genova (GE)",
+        fullAddress: "Lungobisagno Dalmazia 65, 16141 Genova (GE)",
+        phone: "+39 010 835 1200",
+        website: "https://www.deltaflange.it",
+        sources: [
+          { title: "Registro Imprese — C.C.I.A.A. Genova", url: "https://www.registroimprese.it" },
+          { title: "FatturatoItalia — Registro societario", url: "https://www.fatturatoitalia.it" },
+          { title: "Google Maps Places — Sede verificata", url: "https://maps.google.com" },
+        ],
       },
     ],
   };
@@ -195,6 +296,11 @@ export function simulateCompanyHunterSearch(
       employees: template.baseEmp,
       cluster: template.cluster,
       subcategory: `${template.subcategory} (${criteria.area})`,
+      headquartersCity: template.headquartersCity,
+      fullAddress: template.fullAddress,
+      phone: template.phone,
+      website: template.website,
+      sources: template.sources,
     };
   });
 

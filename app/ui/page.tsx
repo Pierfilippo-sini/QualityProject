@@ -20,6 +20,15 @@ const INITIAL_RANKED_COMPANIES: RankedCompanyItem[] = [
     employees: "8-15 stimati",
     cluster: "Logistica",
     subcategory: "Trasporto merci su strada",
+    headquartersCity: "Verona (VR)",
+    fullAddress: "Interporto Quadrante Europa, 37135 Verona (VR)",
+    phone: "+39 045 862 1000",
+    website: "https://www.nordiclogistics.it",
+    sources: [
+      { title: "Registro Imprese — C.C.I.A.A. Verona", url: "https://www.registroimprese.it" },
+      { title: "ReportAziende — Dati camerali 2024", url: "https://www.reportaziende.it" },
+      { title: "Google Maps — Hub logistico verificato", url: "https://maps.google.com" },
+    ],
   },
   {
     rank: 4,
@@ -28,6 +37,15 @@ const INITIAL_RANKED_COMPANIES: RankedCompanyItem[] = [
     employees: "N/A",
     cluster: "Packaging",
     subcategory: "Imballaggi in cartone",
+    headquartersCity: "Bologna (BO)",
+    fullAddress: "Via dell'Industria 14, 40012 Calderara di Reno (BO)",
+    phone: "+39 051 728 900",
+    website: "https://www.vanguardpack.it",
+    sources: [
+      { title: "Registro Imprese — C.C.I.A.A. Bologna", url: "https://www.registroimprese.it" },
+      { title: "FatturatoItalia — Scheda aziendale", url: "https://www.fatturatoitalia.it" },
+      { title: "Google Maps — Stabilimento verificato", url: "https://maps.google.com" },
+    ],
   },
   {
     rank: 3,
@@ -36,6 +54,15 @@ const INITIAL_RANKED_COMPANIES: RankedCompanyItem[] = [
     employees: 34,
     cluster: "Meccanica",
     subcategory: "Lavorazioni CNC",
+    headquartersCity: "Vicenza (VI)",
+    fullAddress: "Viale della Scienza 22, 36100 Vicenza (VI)",
+    phone: "+39 0444 964 120",
+    website: "https://www.officinerossi.it",
+    sources: [
+      { title: "Registro Imprese — C.C.I.A.A. Vicenza", url: "https://www.registroimprese.it" },
+      { title: "ReportAziende — Bilancio depositato", url: "https://www.reportaziende.it" },
+      { title: "Google Maps — Officina verificata", url: "https://maps.google.com" },
+    ],
   },
   {
     rank: 2,
@@ -44,6 +71,15 @@ const INITIAL_RANKED_COMPANIES: RankedCompanyItem[] = [
     employees: 68,
     cluster: "Automazione",
     subcategory: "Robotica industriale",
+    headquartersCity: "Brescia (BS)",
+    fullAddress: "Via Crotte 28, 25127 Brescia (BS)",
+    phone: "+39 030 373 5500",
+    website: "https://www.kronoautomazioni.it",
+    sources: [
+      { title: "Registro Imprese — C.C.I.A.A. Brescia", url: "https://www.registroimprese.it" },
+      { title: "FatturatoItalia — Dati 2024", url: "https://www.fatturatoitalia.it" },
+      { title: "Google Maps — Sede operativa verificata", url: "https://maps.google.com" },
+    ],
   },
   {
     rank: 1,
@@ -52,6 +88,15 @@ const INITIAL_RANKED_COMPANIES: RankedCompanyItem[] = [
     employees: 125,
     cluster: "Meccanica di precisione",
     subcategory: "Componenti aerospaziali",
+    headquartersCity: "Torino (TO)",
+    fullAddress: "Corso Svizzera 185, 10149 Torino (TO)",
+    phone: "+39 011 749 6100",
+    website: "https://www.aeternaprecision.it",
+    sources: [
+      { title: "Registro Imprese — C.C.I.A.A. Torino", url: "https://www.registroimprese.it" },
+      { title: "ReportAziende — Bilancio depositato", url: "https://www.reportaziende.it" },
+      { title: "Google Maps — Sede legale & operativa verificata", url: "https://maps.google.com" },
+    ],
   },
 ];
 
