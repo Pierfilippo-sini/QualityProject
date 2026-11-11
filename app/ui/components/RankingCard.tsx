@@ -58,7 +58,7 @@ export default function RankingCard({
   const [isFlipped, setIsFlipped] = useState(false);
   const [isSourcesOpen, setIsSourcesOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
-  const [isEmailOpen, setIsEmailOpen] = useState(true);
+  const [isEmailOpen, setIsEmailOpen] = useState(false);
   const [activePersonaTab, setActivePersonaTab] = useState<number>(1);
 
   const isOutOfRanking = company.rank > targetRankedCount;
@@ -264,22 +264,25 @@ export default function RankingCard({
                 </span>
               </div>
 
-              {/* 5. Sede (Indirizzo preciso) */}
+              {/* 5. Sede (Indirizzo preciso con icona allineata al titolo) */}
               <div className="rv-back-field">
-                <span className="rv-back-field__label">Sede</span>
-                <div className="rv-back-field__row">
+                <div className="rv-back-field__label-row">
                   <MapPin size={11} className="rv-back-field-icon" />
-                  <span className="rv-back-field__text">
-                    {company.fullAddress ||
-                      company.headquartersCity ||
-                      "Milano (MI)"}
-                  </span>
+                  <span className="rv-back-field__label">Sede</span>
                 </div>
+                <span className="rv-back-field__val text-[11.5px] leading-snug">
+                  {company.fullAddress ||
+                    company.headquartersCity ||
+                    "Milano (MI)"}
+                </span>
               </div>
 
-              {/* 6. Telefono */}
+              {/* 6. Telefono (con icona allineata al titolo) */}
               <div className="rv-back-field">
-                <span className="rv-back-field__label">Telefono</span>
+                <div className="rv-back-field__label-row">
+                  <Phone size={11} className="rv-back-field-icon" />
+                  <span className="rv-back-field__label">Telefono</span>
+                </div>
                 <a
                   href={
                     company.phone
@@ -289,14 +292,16 @@ export default function RankingCard({
                   className="rv-back-field__link"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <Phone size={11} className="rv-back-field-icon" />
                   <span>{company.phone || "+39 02 0000000"}</span>
                 </a>
               </div>
 
-              {/* 7. Sito ufficiale */}
+              {/* 7. Sito ufficiale (con icona allineata al titolo) */}
               <div className="rv-back-field">
-                <span className="rv-back-field__label">Sito ufficiale</span>
+                <div className="rv-back-field__label-row">
+                  <Globe size={11} className="rv-back-field-icon" />
+                  <span className="rv-back-field__label">Sito ufficiale</span>
+                </div>
                 <a
                   href={company.website || "#"}
                   target="_blank"
@@ -304,7 +309,6 @@ export default function RankingCard({
                   className="rv-back-field__link"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <Globe size={11} className="rv-back-field-icon" />
                   <span className="rv-back-field__url">
                     {company.website?.replace(/^https?:\/\//, "") || "azienda.it"}
                   </span>
@@ -383,18 +387,18 @@ export default function RankingCard({
                   </h5>
                   <p className="rv-back-prose">
                     {dossier.keyInfo.summary}{" "}
-                    <strong>Core business:</strong> {dossier.keyInfo.coreBusiness}{" "}
-                    <strong>Mercati:</strong> {dossier.keyInfo.markets}
+                    <u className="rv-back-emphasis">Core business:</u> {dossier.keyInfo.coreBusiness}{" "}
+                    <u className="rv-back-emphasis">Mercati:</u> {dossier.keyInfo.markets}
                   </p>
                 </div>
 
                 {/* 2. DOPPIO MATCHING SERVIZI CXI PERTINENTI (Sezione Principale) */}
                 <div className="rv-back-card rv-back-card--cxi">
-                  <div className="flex items-center justify-between pb-1 border-b border-[var(--color-8)]/50">
+                  <div className="flex items-center justify-between pb-1.5 border-b border-[var(--color-8)]/50">
                     <h5 className="rv-back-card-title">
                       DOPPIO MATCHING SERVIZI CXI PERTINENTI
                     </h5>
-                    <span className="text-[10px] uppercase font-semibold text-[var(--color-4)] tracking-wider">
+                    <span className="text-[10px] uppercase font-bold text-[var(--color-6)] tracking-wider">
                       Opportunità Prioritaria
                     </span>
                   </div>
@@ -416,7 +420,7 @@ export default function RankingCard({
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
-                          className="rv-action-btn"
+                          className="rv-action-btn rv-action-btn--email-toggle"
                           onClick={(e) => {
                             e.stopPropagation();
                             setIsEmailOpen(!isEmailOpen);
@@ -425,45 +429,43 @@ export default function RankingCard({
                           {isEmailOpen ? "Nascondi Bozza Email" : "Mostra Bozza Email"}
                         </button>
 
-                        <button
-                          type="button"
-                          className="rv-action-btn rv-action-btn--primary"
-                          onClick={handleCopyEmail}
-                          title="Copia l'intero gancio mail"
-                        >
-                          {isCopied ? (
-                            <>
-                              <Check size={12} className="text-emerald-600" />
-                              <span className="text-emerald-700 font-semibold">
-                                Copiato!
-                              </span>
-                            </>
-                          ) : (
-                            <>
-                              <Copy size={12} />
-                              <span>Copia Gancio Mail</span>
-                            </>
-                          )}
-                        </button>
+                        {isEmailOpen && (
+                          <button
+                            type="button"
+                            className="rv-action-btn rv-action-btn--primary"
+                            onClick={handleCopyEmail}
+                            title="Copia l'intero gancio mail"
+                          >
+                            {isCopied ? (
+                              <>
+                                <Check size={12} className="text-emerald-600" />
+                                <span className="text-emerald-700 font-semibold">
+                                  Copiato!
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy size={12} />
+                                <span>Copia Gancio Mail</span>
+                              </>
+                            )}
+                          </button>
+                        )}
                       </div>
                     </div>
 
                     <div className="rv-cxi-content">
                       <p>
-                        <strong className="text-[var(--color-2)]">
-                          Servizio Proposto:{" "}
-                        </strong>
+                        <u className="rv-back-emphasis">Servizio Proposto:</u>{" "}
                         <span>{dossier.cxiPrimary.tailoredService}</span>
                       </p>
                       <p>
-                        <strong className="text-[var(--color-2)]">
-                          Contesto Operativo:{" "}
-                        </strong>
+                        <u className="rv-back-emphasis">Contesto Operativo:</u>{" "}
                         <span>{dossier.cxiPrimary.trigger}</span>
                       </p>
                     </div>
 
-                    {/* Bozza Email Espandibile */}
+                    {/* Bozza Email Espandibile (nascosta di default) */}
                     <AnimatePresence>
                       {isEmailOpen && (
                         <motion.div
@@ -500,15 +502,11 @@ export default function RankingCard({
 
                     <div className="rv-cxi-content">
                       <p>
-                        <strong className="text-[var(--color-2)]">
-                          Servizio Proposto:{" "}
-                        </strong>
+                        <u className="rv-back-emphasis">Servizio Proposto:</u>{" "}
                         <span>{dossier.cxiSecondary.tailoredService}</span>
                       </p>
                       <p>
-                        <strong className="text-[var(--color-2)]">
-                          Contesto Operativo:{" "}
-                        </strong>
+                        <u className="rv-back-emphasis">Contesto Operativo:</u>{" "}
                         <span>{dossier.cxiSecondary.trigger}</span>
                       </p>
                     </div>
@@ -517,7 +515,7 @@ export default function RankingCard({
 
                 {/* 3. INTERLOCUTORI & BUYER PERSONAS TARGET (Con selettore a Tab per massima chiarezza) */}
                 <div className="rv-back-card">
-                  <div className="flex items-center justify-between pb-1 border-b border-[var(--color-8)]/50">
+                  <div className="flex items-center justify-between pb-1.5 border-b border-[var(--color-8)]/50">
                     <h5 className="rv-back-card-title">
                       INTERLOCUTORI & 2 BUYER PERSONAS TARGET
                     </h5>
@@ -550,11 +548,11 @@ export default function RankingCard({
                         <span className="rv-persona-tag">
                           Figura #{activePersona.figureNumber}
                         </span>
-                        <h6 className="font-bold text-[13px] text-[var(--color-2)]">
+                        <h6 className="rv-persona-role-title">
                           {activePersona.role}
                         </h6>
                       </div>
-                      <span className="text-[10px] uppercase font-semibold text-[var(--color-4)]">
+                      <span className="text-[11px] uppercase font-bold text-[var(--color-6)] tracking-wide">
                         {activePersona.figureNumber === 1
                           ? "Decisore Economico"
                           : "Sponsor Strategico"}
@@ -563,21 +561,15 @@ export default function RankingCard({
 
                     <div className="rv-persona-rows">
                       <p>
-                        <strong className="text-[var(--color-2)]">
-                          Ruolo Decisionale:{" "}
-                        </strong>
+                        <u className="rv-back-emphasis">Ruolo Decisionale:</u>{" "}
                         <span>{activePersona.decisionLevel}</span>
                       </p>
                       <p>
-                        <strong className="text-[var(--color-2)]">
-                          Priorità Chiave:{" "}
-                        </strong>
+                        <u className="rv-back-emphasis">Priorità Chiave:</u>{" "}
                         <span>{activePersona.interests}</span>
                       </p>
                       <p>
-                        <strong className="text-[var(--color-2)]">
-                          Approccio Consigliato:{" "}
-                        </strong>
+                        <u className="rv-back-emphasis">Approccio Consigliato:</u>{" "}
                         <span>{activePersona.firstMessageAngle}</span>
                       </p>
                     </div>

@@ -851,39 +851,35 @@
 #reviews .rv-back-field {
   display: flex;
   flex-direction: column;
-  gap: 1.5px;
+  gap: 2px;
+}
+#reviews .rv-back-field__label-row {
+  display: flex;
+  align-items: center;
+  gap: 4.5px;
 }
 #reviews .rv-back-field__label {
-  font-size: 9px;
+  font-size: 9.5px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--color-4);
 }
+#reviews .rv-back-field-icon {
+  flex-shrink: 0;
+  color: var(--color-6, #d12a1e);
+}
 #reviews .rv-back-field__val {
   font-family: var(--font-1);
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--color-2);
   word-break: break-word;
 }
 #reviews .rv-back-field__val--strong {
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 700;
   letter-spacing: -0.01em;
-}
-#reviews .rv-back-field__row {
-  display: flex;
-  align-items: flex-start;
-  gap: 4px;
-  font-size: 10.5px;
-  line-height: 1.25;
-  color: var(--color-2);
-}
-#reviews .rv-back-field-icon {
-  flex-shrink: 0;
-  margin-top: 2px;
-  color: var(--color-4);
 }
 #reviews .rv-back-field__link {
   display: inline-flex;
@@ -1012,22 +1008,43 @@
   background: var(--color-4, #6b6b6b);
 }
 
-/* Cards minimali della colonna destra (coerenti con lo sfondo della scheda) */
+/* Cards della colonna destra: base comune */
 #reviews .rv-back-card {
-  border: 1px solid var(--color-8, rgba(0, 0, 0, 0.12));
-  border-radius: 6px;
-  padding: 10px 14px;
-  background: rgba(0, 0, 0, 0.015);
+  border-radius: 8px;
+  padding: 12px 16px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
+  transition: all 0.2s ease;
+}
+
+/* Nelle schede grigie (m-surface), le sezioni sono BIANCHE per staccare con massima nitidezza */
+#reviews .rv-card-face.m-surface .rv-back-card {
+  background: var(--color-1, #ffffff);
+  border: 1px solid rgba(0, 0, 0, 0.09);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+#reviews .rv-card-face.m-surface .rv-email-box {
+  background: #f8f8fa;
+  border: 1px solid #e1e3e7;
+}
+
+/* Nelle schede bianche (m-surface-2), le sezioni usano un grigio più scuro per definire i blocchi */
+#reviews .rv-card-face.m-surface-2 .rv-back-card {
+  background: #eaeaea;
+  border: 1px solid #d4d4d4;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+}
+#reviews .rv-card-face.m-surface-2 .rv-email-box {
+  background: #dedede;
+  border: 1px solid #c7c7c7;
 }
 
 #reviews .rv-back-card-title {
   font-family: var(--font-1);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--color-4);
   margin: 0;
@@ -1036,29 +1053,35 @@
 /* Informazioni Chiave: Trafiletto Unico senza divisori */
 #reviews .rv-back-prose {
   font-family: var(--font-1);
-  font-size: 11.5px;
-  line-height: 1.5;
+  font-size: 13px;
+  line-height: 1.55;
   color: var(--color-2);
   margin: 0;
 }
-#reviews .rv-back-prose strong {
+
+/* Parole chiave in evidenza (grassetto + sottolineate) */
+#reviews .rv-back-emphasis {
   font-weight: 700;
+  font-size: 13.5px;
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
   color: var(--color-2);
 }
 
 /* Doppio Matching Servizi CXI Pertinenti */
 #reviews .rv-back-card--cxi {
-  gap: 10px;
+  gap: 12px;
 }
 #reviews .rv-cxi-item {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 7px;
 }
 #reviews .rv-cxi-item--secondary {
-  border-top: 1px solid var(--color-8, rgba(0, 0, 0, 0.09));
-  padding-top: 8px;
-  margin-top: 2px;
+  border-top: 1px solid var(--color-8, rgba(0, 0, 0, 0.12));
+  padding-top: 10px;
+  margin-top: 4px;
 }
 #reviews .rv-cxi-head-row {
   display: flex;
@@ -1070,28 +1093,35 @@
 #reviews .rv-cxi-pill {
   display: inline-flex;
   align-items: center;
-  height: 22px;
-  padding: 0 9px;
+  height: 28px;
+  padding: 0 12px;
   border-radius: var(--radius-1);
-  font-size: 10.5px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
   white-space: nowrap;
 }
 #reviews .rv-cxi-pill--primary {
   border: 1px solid var(--color-2);
   background: var(--color-2);
   color: var(--color-1);
+  font-size: 13.5px;
+  font-weight: 800;
 }
 #reviews .rv-cxi-pill--secondary {
   border: 1px solid var(--color-2);
   background: transparent;
   color: var(--color-2);
+  font-size: 13px;
+  font-weight: 700;
 }
 #reviews .rv-cxi-pill--year {
-  border: 1px solid var(--color-8, rgba(0, 0, 0, 0.16));
+  border: 1px solid var(--color-8, rgba(0, 0, 0, 0.18));
   background: transparent;
   color: var(--color-4);
-  font-size: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  height: 24px;
+  padding: 0 8px;
 }
 
 /* Pulsanti Azione CXI (Bozza email, Copia) */
@@ -1099,14 +1129,14 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  height: 22px;
-  padding: 0 9px;
+  height: 26px;
+  padding: 0 11px;
   border-radius: var(--radius-1);
-  border: 1px solid var(--color-8, rgba(0, 0, 0, 0.16));
+  border: 1px solid var(--color-8, rgba(0, 0, 0, 0.18));
   background: transparent;
   color: var(--color-2);
-  font-size: 10px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -1114,6 +1144,19 @@
   border-color: var(--color-2);
   background: rgba(0, 0, 0, 0.04);
 }
+
+/* Bottone Mostra/Nascondi Bozza Email con risalto rosso */
+#reviews .rv-action-btn--email-toggle {
+  border-color: var(--color-6, #d12a1e);
+  color: var(--color-6, #d12a1e);
+}
+#reviews .rv-action-btn--email-toggle:hover {
+  background: var(--color-6, #d12a1e);
+  color: var(--color-1, #ffffff);
+  border-color: var(--color-6, #d12a1e);
+}
+
+/* Bottone Copia Gancio Mail (appare solo se la bozza è visibile) */
 #reviews .rv-action-btn--primary {
   border-color: var(--color-2);
   background: var(--color-2);
@@ -1127,70 +1170,64 @@
 #reviews .rv-cxi-content {
   display: flex;
   flex-direction: column;
-  gap: 3.5px;
-  font-size: 11px;
-  line-height: 1.4;
-  color: var(--color-2);
-}
-#reviews .rv-cxi-content strong {
-  font-weight: 600;
+  gap: 4px;
+  font-size: 13px;
+  line-height: 1.5;
   color: var(--color-2);
 }
 
 /* Bozza Email (Espandibile / Collapsible) */
 #reviews .rv-email-drawer {
   overflow: hidden;
-  margin-top: 4px;
+  margin-top: 6px;
 }
 #reviews .rv-email-box {
-  border: 1px solid var(--color-8, rgba(0, 0, 0, 0.12));
-  border-radius: 4px;
-  padding: 9px 11px;
-  background: rgba(0, 0, 0, 0.02);
+  border-radius: 6px;
+  padding: 11px 14px;
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
 }
 #reviews .rv-email-header {
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--color-4);
+  color: var(--color-6, #d12a1e);
 }
 #reviews .rv-email-subject {
-  font-size: 10.5px;
+  font-size: 12px;
   color: var(--color-2);
-  line-height: 1.35;
+  line-height: 1.4;
 }
 #reviews .rv-email-subject strong {
   font-weight: 700;
 }
 #reviews .rv-email-body {
-  font-size: 10.5px;
-  line-height: 1.45;
+  font-size: 12px;
+  line-height: 1.55;
   color: var(--color-2);
-  border-top: 1px solid var(--color-8, rgba(0, 0, 0, 0.08));
-  padding-top: 6px;
+  border-top: 1px solid var(--color-8, rgba(0, 0, 0, 0.1));
+  padding-top: 8px;
 }
 
 /* Buyer Personas Target con Selettore a Tab */
 #reviews .rv-persona-tabs {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  background: rgba(0, 0, 0, 0.04);
-  padding: 2px;
+  gap: 5px;
+  background: rgba(0, 0, 0, 0.05);
+  padding: 2.5px;
   border-radius: var(--radius-1);
 }
 #reviews .rv-persona-tab {
   font-family: var(--font-1);
-  font-size: 9.5px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 700;
   color: var(--color-4);
   background: transparent;
   border: none;
-  padding: 2.5px 8px;
+  padding: 4px 12px;
   border-radius: calc(var(--radius-1) - 2px);
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1198,36 +1235,42 @@
 #reviews .rv-persona-tab:hover {
   color: var(--color-2);
 }
+/* Scelta interlocutore con il colore ROSSO del sito */
 #reviews .rv-persona-tab.is-active {
-  background: var(--color-2);
-  color: var(--color-1);
+  background: var(--color-6, #d12a1e);
+  color: var(--color-1, #ffffff);
+  box-shadow: 0 1px 3px rgba(209, 42, 30, 0.25);
 }
 #reviews .rv-persona-view {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   padding-top: 4px;
 }
 #reviews .rv-persona-tag {
   display: inline-flex;
   align-items: center;
-  padding: 1.5px 5px;
-  border-radius: 3px;
-  border: 1px solid var(--color-8, rgba(0, 0, 0, 0.16));
-  font-size: 9px;
-  font-weight: 600;
-  color: var(--color-4);
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid var(--color-6, #d12a1e);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-6, #d12a1e);
+  background: rgba(209, 42, 30, 0.06);
+}
+#reviews .rv-persona-role-title {
+  font-family: var(--font-1);
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--color-2);
+  margin: 0;
 }
 #reviews .rv-persona-rows {
   display: flex;
   flex-direction: column;
-  gap: 3.5px;
-  font-size: 11px;
-  line-height: 1.4;
-  color: var(--color-2);
-}
-#reviews .rv-persona-rows strong {
-  font-weight: 600;
+  gap: 5px;
+  font-size: 13px;
+  line-height: 1.5;
   color: var(--color-2);
 }
 
