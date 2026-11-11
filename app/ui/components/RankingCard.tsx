@@ -44,7 +44,7 @@ interface RankingCardProps {
   targetRankedCount: number;
 }
 
-// Velocità animazioni (più lente per essere viste a schermo)
+// Velocità animazioni per il fronte della scheda
 const TYPING_SPEED_MS = 170;
 
 export default function RankingCard({
@@ -58,6 +58,8 @@ export default function RankingCard({
   const [isFlipped, setIsFlipped] = useState(false);
   const [isSourcesOpen, setIsSourcesOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  const [isEmailOpen, setIsEmailOpen] = useState(true);
+  const [activePersonaTab, setActivePersonaTab] = useState<number>(1);
 
   const isOutOfRanking = company.rank > targetRankedCount;
   const surfaceClass = index % 2 === 0 ? "m-surface" : "m-surface-2";
@@ -94,6 +96,10 @@ export default function RankingCard({
         className="m-text-4 rv-typing"
       />
     );
+
+  const activePersona =
+    dossier.buyerPersonas.find((p) => p.figureNumber === activePersonaTab) ||
+    dossier.buyerPersonas[0];
 
   return (
     <li
@@ -167,26 +173,62 @@ export default function RankingCard({
 
         {/* ==================== RETRO SCHEDA ==================== */}
         <div className={`rv-card-face rv-card-face--back ${surfaceClass}`}>
-          {/* Header superiore minimale: Badge rank + Nome azienda in piccolo + Torna alla scheda */}
+          {/* Header superiore: Badge rank + Nome azienda + Scoring ultra-compatto + Torna alla scheda */}
           <div className="rv-back-header">
             <div className="rv-back-header-left">
               <span className="rv-back-badge">#{company.rank}</span>
               <h4 className="rv-back-company-name">{company.name}</h4>
             </div>
+
+            {/* Strip di Scoring compatta inserita nell'header (zero spazio sprecato) */}
+            <div className="rv-header-scoring-strip">
+              <div className="rv-header-score-item">
+                <span className="rv-header-score-label">Fit</span>
+                <span className="rv-header-score-val">
+                  {dossier.scoringBreakdown.fitTargetScore.toFixed(1)}
+                </span>
+              </div>
+
+              <div className="rv-header-score-item">
+                <span className="rv-header-score-label">Trigger</span>
+                <span className="rv-header-score-val">
+                  {dossier.scoringBreakdown.potenzaTriggerScore.toFixed(1)}
+                </span>
+              </div>
+
+              {/* Malus Persona incluso SOLTANTO se presente (> 0) */}
+              {dossier.scoringBreakdown.malusPersona > 0 && (
+                <div className="rv-header-score-item rv-header-score-item--malus">
+                  <span className="rv-header-score-label">Malus</span>
+                  <span className="rv-header-score-val">
+                    -{dossier.scoringBreakdown.malusPersona.toFixed(2)}
+                  </span>
+                </div>
+              )}
+
+              <div className="rv-header-score-item rv-header-score-item--total">
+                <span className="rv-header-score-label">Score</span>
+                <span className="rv-header-score-val">
+                  {dossier.scoringBreakdown.totalScore.toFixed(1)}
+                </span>
+                <span className="text-[9px] opacity-70">/10</span>
+              </div>
+            </div>
+
             <button
               type="button"
               className="rv-back-return-btn"
               onClick={() => setIsFlipped(false)}
               title="Torna alla scheda"
             >
-              <ArrowLeft size={13} className="rv-back-return-btn__icon" />
+              <ArrowLeft size={12} className="rv-back-return-btn__icon" />
               <span>Torna alla scheda</span>
             </button>
           </div>
 
-          {/* Body: Colonna sinistra compatta + Area destra minimizzata */}
+          {/* Body: Colonna sinistra compatta + Area destra user-friendly */}
           <div className="rv-back-body">
-            {/* ----------------- COLONNA SINISTRA (Compatta e minimale) ----------------- */}
+            {/* ----------------- COLONNA SINISTRA ----------------- */}
             <aside className="rv-back-col-left">
               {/* 1. Fatturato */}
               <div className="rv-back-field">
@@ -269,7 +311,7 @@ export default function RankingCard({
                 </a>
               </div>
 
-              {/* 8. Fonti (la voce più in basso nella colonna sinistra) */}
+              {/* 8. Fonti (la voce più in basso) */}
               <div className="rv-back-field rv-back-sources-box">
                 <button
                   type="button"
@@ -331,216 +373,214 @@ export default function RankingCard({
               </div>
             </aside>
 
-            {/* ----------------- COLONNA DESTRA (Ottimizzata e Minimale) ----------------- */}
+            {/* ----------------- COLONNA DESTRA (User-Friendly & Pulita) ----------------- */}
             <section className="rv-back-col-right">
               <div className="rv-back-right-scroll-container">
-                {/* RIGA 1: Informazioni Chiave (Sinistra) + Metodo di Scoring (Destra) side-by-side! */}
-                <div className="rv-back-top-row">
-                  {/* Informazioni Chiave sull'Azienda (~56% larghezza) */}
-                  <div className="rv-back-panel rv-back-panel--info">
-                    <h5 className="rv-back-sec-title">
-                      INFORMAZIONI CHIAVE SULL&apos;AZIENDA
-                    </h5>
-                    <p className="rv-back-info-summary">
-                      {dossier.keyInfo.summary}
-                    </p>
-                    <div className="rv-back-info-subgrid">
-                      <div>
-                        <span className="rv-back-info-tag">Core Business: </span>
-                        <span>{dossier.keyInfo.coreBusiness}</span>
-                      </div>
-                      <div>
-                        <span className="rv-back-info-tag">Mercati: </span>
-                        <span>{dossier.keyInfo.markets}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Breakdown Metodo di Scoring (~44% larghezza, compatto, senza malus nel titolo!) */}
-                  <div className="rv-back-panel rv-back-panel--scoring">
-                    <h5 className="rv-back-sec-title">
-                      BREAKDOWN METODO DI SCORING
-                    </h5>
-                    <div className="rv-scoring-strip">
-                      {/* Fit Target (25%) */}
-                      <div className="rv-scoring-cell">
-                        <span className="rv-scoring-cell__label">
-                          Fit (25%)
-                        </span>
-                        <div className="rv-scoring-cell__val">
-                          {dossier.scoringBreakdown.fitTargetScore.toFixed(1)}
-                        </div>
-                        <span className="rv-scoring-cell__sub">
-                          {dossier.scoringBreakdown.fitTargetWeighted}
-                        </span>
-                      </div>
-
-                      {/* Potenza Trigger (75%) */}
-                      <div className="rv-scoring-cell">
-                        <span className="rv-scoring-cell__label">
-                          Trigger (75%)
-                        </span>
-                        <div className="rv-scoring-cell__val">
-                          {dossier.scoringBreakdown.potenzaTriggerScore.toFixed(1)}
-                        </div>
-                        <span className="rv-scoring-cell__sub">
-                          {dossier.scoringBreakdown.potenzaTriggerWeighted}
-                        </span>
-                      </div>
-
-                      {/* Malus Persona (discreto / meno peso visivo) */}
-                      <div className="rv-scoring-cell rv-scoring-cell--minor">
-                        <span className="rv-scoring-cell__label text-[9.5px]">
-                          Malus Persona
-                        </span>
-                        <div className="rv-scoring-cell__val text-[14px] text-rose-500 font-medium">
-                          {dossier.scoringBreakdown.malusPersona.toFixed(2)}
-                        </div>
-                        <span className="rv-scoring-cell__sub text-[9.5px]">
-                          {dossier.scoringBreakdown.malusPersonaMax || "max -0.50"}
-                        </span>
-                      </div>
-
-                      {/* Totale (in evidenza) */}
-                      <div className="rv-scoring-cell rv-scoring-cell--total">
-                        <span className="rv-scoring-cell__label font-bold text-[var(--color-2)]">
-                          Totale
-                        </span>
-                        <div className="rv-scoring-cell__val text-[18px] font-bold text-[var(--color-2)]">
-                          {dossier.scoringBreakdown.totalScore.toFixed(1)}
-                        </div>
-                        <span className="rv-scoring-cell__sub font-medium text-[var(--color-2)]">
-                          / 10
-                        </span>
-                      </div>
-                    </div>
-                    <p className="rv-scoring-note">
-                      Score {dossier.scoringBreakdown.totalScore.toFixed(1)}/10 = 25% Fit Target + 75% Trigger con 2 Buyer Personas complete. Aderenza ottimale ai criteri dimensionali e territoriali.
-                    </p>
-                  </div>
+                {/* 1. INFORMAZIONI CHIAVE SULL'AZIENDA (Trafiletto Unico senza divisori) */}
+                <div className="rv-back-card">
+                  <h5 className="rv-back-card-title">
+                    INFORMAZIONI CHIAVE SULL&apos;AZIENDA
+                  </h5>
+                  <p className="rv-back-prose">
+                    {dossier.keyInfo.summary}{" "}
+                    <strong>Core business:</strong> {dossier.keyInfo.coreBusiness}{" "}
+                    <strong>Mercati:</strong> {dossier.keyInfo.markets}
+                  </p>
                 </div>
 
-                {/* RIGA 2: DOPPIO MATCHING SERVIZI CXI PERTINENTI (Sezione Principale) */}
-                <div className="rv-back-panel rv-back-panel--cxi">
-                  <h5 className="rv-back-sec-title">
-                    DOPPIO MATCHING SERVIZI CXI PERTINENTI
-                  </h5>
+                {/* 2. DOPPIO MATCHING SERVIZI CXI PERTINENTI (Sezione Principale) */}
+                <div className="rv-back-card rv-back-card--cxi">
+                  <div className="flex items-center justify-between pb-1 border-b border-[var(--color-8)]/50">
+                    <h5 className="rv-back-card-title">
+                      DOPPIO MATCHING SERVIZI CXI PERTINENTI
+                    </h5>
+                    <span className="text-[10px] uppercase font-semibold text-[var(--color-4)] tracking-wider">
+                      Opportunità Prioritaria
+                    </span>
+                  </div>
 
                   {/* Soluzione Principale */}
-                  <div className="rv-cxi-block">
-                    <div className="rv-cxi-head">
+                  <div className="rv-cxi-item">
+                    <div className="rv-cxi-head-row">
                       <div className="flex items-center gap-2">
-                        <span className="rv-cxi-badge rv-cxi-badge--primary">
+                        <span className="rv-cxi-pill rv-cxi-pill--primary">
                           Soluzione Principale: {dossier.cxiPrimary.name}
                         </span>
                         {dossier.cxiPrimary.year && (
-                          <span className="rv-cxi-badge rv-cxi-badge--year">
+                          <span className="rv-cxi-pill rv-cxi-pill--year">
                             {dossier.cxiPrimary.year}
                           </span>
                         )}
                       </div>
 
-                      <button
-                        type="button"
-                        className="rv-cxi-copy-btn"
-                        onClick={handleCopyEmail}
-                        title="Copia l'intero gancio mail"
-                      >
-                        {isCopied ? (
-                          <>
-                            <Check size={12} className="text-emerald-600" />
-                            <span className="text-emerald-700 font-semibold">
-                              Copiato!
-                            </span>
-                          </>
-                        ) : (
-                          <>
-                            <Copy size={12} />
-                            <span>Copia Gancio Mail</span>
-                          </>
-                        )}
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          className="rv-action-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setIsEmailOpen(!isEmailOpen);
+                          }}
+                        >
+                          {isEmailOpen ? "Nascondi Bozza Email" : "Mostra Bozza Email"}
+                        </button>
+
+                        <button
+                          type="button"
+                          className="rv-action-btn rv-action-btn--primary"
+                          onClick={handleCopyEmail}
+                          title="Copia l'intero gancio mail"
+                        >
+                          {isCopied ? (
+                            <>
+                              <Check size={12} className="text-emerald-600" />
+                              <span className="text-emerald-700 font-semibold">
+                                Copiato!
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy size={12} />
+                              <span>Copia Gancio Mail</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
                     </div>
 
-                    <div className="rv-cxi-details">
+                    <div className="rv-cxi-content">
                       <p>
-                        <strong>Servizio su misura (1 riga): </strong>
-                        {dossier.cxiPrimary.tailoredService}
+                        <strong className="text-[var(--color-2)]">
+                          Servizio Proposto:{" "}
+                        </strong>
+                        <span>{dossier.cxiPrimary.tailoredService}</span>
                       </p>
                       <p>
-                        <strong>Aggancio al fatto (Trigger): </strong>
-                        {dossier.cxiPrimary.trigger}
+                        <strong className="text-[var(--color-2)]">
+                          Contesto Operativo:{" "}
+                        </strong>
+                        <span>{dossier.cxiPrimary.trigger}</span>
                       </p>
                     </div>
 
-                    {/* Box Gancio Mail Dedicato */}
-                    <div className="rv-email-block">
-                      <div className="rv-email-block__header">
-                        GANCIO MAIL (DEDICATO ALLA SOLUZIONE CXI PRINCIPALE)
-                      </div>
-                      <div className="rv-email-block__subject">
-                        <strong>Oggetto: </strong>
-                        {dossier.cxiPrimary.emailHook.subject}
-                      </div>
-                      <div className="rv-email-block__body whitespace-pre-line">
-                        {dossier.cxiPrimary.emailHook.body}
-                      </div>
-                    </div>
+                    {/* Bozza Email Espandibile */}
+                    <AnimatePresence>
+                      {isEmailOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.22, ease: "easeOut" }}
+                          className="rv-email-drawer"
+                        >
+                          <div className="rv-email-box">
+                            <div className="rv-email-header">
+                              Bozza Email Personalizzata (COO)
+                            </div>
+                            <div className="rv-email-subject">
+                              <strong>Oggetto: </strong>
+                              {dossier.cxiPrimary.emailHook.subject}
+                            </div>
+                            <div className="rv-email-body whitespace-pre-line">
+                              {dossier.cxiPrimary.emailHook.body}
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
 
                   {/* Soluzione Secondaria */}
-                  <div className="rv-cxi-block rv-cxi-block--secondary">
-                    <div className="rv-cxi-head">
-                      <span className="rv-cxi-badge rv-cxi-badge--secondary">
+                  <div className="rv-cxi-item rv-cxi-item--secondary">
+                    <div className="rv-cxi-head-row">
+                      <span className="rv-cxi-pill rv-cxi-pill--secondary">
                         Soluzione Secondaria: {dossier.cxiSecondary.name}
                       </span>
                     </div>
 
-                    <div className="rv-cxi-details">
+                    <div className="rv-cxi-content">
                       <p>
-                        <strong>Servizio su misura (1 riga): </strong>
-                        {dossier.cxiSecondary.tailoredService}
+                        <strong className="text-[var(--color-2)]">
+                          Servizio Proposto:{" "}
+                        </strong>
+                        <span>{dossier.cxiSecondary.tailoredService}</span>
                       </p>
                       <p>
-                        <strong>Trigger / Esigenza: </strong>
-                        {dossier.cxiSecondary.trigger}
+                        <strong className="text-[var(--color-2)]">
+                          Contesto Operativo:{" "}
+                        </strong>
+                        <span>{dossier.cxiSecondary.trigger}</span>
                       </p>
                     </div>
                   </div>
                 </div>
 
-                {/* RIGA 3: INTERLOCUTORI & 2 BUYER PERSONAS TARGET (2 Colonne affiancate) */}
-                <div className="rv-back-panel rv-back-panel--personas">
-                  <h5 className="rv-back-sec-title">
-                    INTERLOCUTORI & 2 BUYER PERSONAS TARGET
-                  </h5>
+                {/* 3. INTERLOCUTORI & BUYER PERSONAS TARGET (Con selettore a Tab per massima chiarezza) */}
+                <div className="rv-back-card">
+                  <div className="flex items-center justify-between pb-1 border-b border-[var(--color-8)]/50">
+                    <h5 className="rv-back-card-title">
+                      INTERLOCUTORI & 2 BUYER PERSONAS TARGET
+                    </h5>
+                    {/* Selettore a Tab minimalista */}
+                    <div className="rv-persona-tabs">
+                      {dossier.buyerPersonas.map((persona) => (
+                        <button
+                          key={persona.figureNumber}
+                          type="button"
+                          className={`rv-persona-tab ${
+                            activePersonaTab === persona.figureNumber
+                              ? "is-active"
+                              : ""
+                          }`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActivePersonaTab(persona.figureNumber);
+                          }}
+                        >
+                          Figura #{persona.figureNumber}: {persona.figureNumber === 1 ? "COO" : "CIO / CDO"}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-                  <div className="rv-personas-grid">
-                    {dossier.buyerPersonas.map((persona, pIdx) => (
-                      <div key={pIdx} className="rv-persona-box">
-                        <div className="rv-persona-head">
-                          <span className="rv-persona-badge">
-                            Figura #{persona.figureNumber}
-                          </span>
-                          <h6 className="rv-persona-title">{persona.role}</h6>
-                        </div>
-
-                        <div className="rv-persona-lines">
-                          <p>
-                            <strong>Livello / Peso Decisionale: </strong>
-                            {persona.decisionLevel}
-                          </p>
-                          <p>
-                            <strong>Cosa gli interessa: </strong>
-                            {persona.interests}
-                          </p>
-                          <p>
-                            <strong>Primo messaggio utile (Angolo d&apos;attacco): </strong>
-                            {persona.firstMessageAngle}
-                          </p>
-                        </div>
+                  {/* Scheda Interlocutore Attivo: ariosa, chiara, senza affollamento */}
+                  <div className="rv-persona-view">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="rv-persona-tag">
+                          Figura #{activePersona.figureNumber}
+                        </span>
+                        <h6 className="font-bold text-[13px] text-[var(--color-2)]">
+                          {activePersona.role}
+                        </h6>
                       </div>
-                    ))}
+                      <span className="text-[10px] uppercase font-semibold text-[var(--color-4)]">
+                        {activePersona.figureNumber === 1
+                          ? "Decisore Economico"
+                          : "Sponsor Strategico"}
+                      </span>
+                    </div>
+
+                    <div className="rv-persona-rows">
+                      <p>
+                        <strong className="text-[var(--color-2)]">
+                          Ruolo Decisionale:{" "}
+                        </strong>
+                        <span>{activePersona.decisionLevel}</span>
+                      </p>
+                      <p>
+                        <strong className="text-[var(--color-2)]">
+                          Priorità Chiave:{" "}
+                        </strong>
+                        <span>{activePersona.interests}</span>
+                      </p>
+                      <p>
+                        <strong className="text-[var(--color-2)]">
+                          Approccio Consigliato:{" "}
+                        </strong>
+                        <span>{activePersona.firstMessageAngle}</span>
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>

@@ -732,6 +732,8 @@
   padding-bottom: 8px;
   border-bottom: 1px solid var(--color-8, rgba(0, 0, 0, 0.12));
   flex-shrink: 0;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 #reviews .rv-back-header-left {
   display: flex;
@@ -778,6 +780,50 @@
   color: var(--color-2);
   border-color: var(--color-2);
   transform: translateX(-2px);
+}
+
+/* Header Scoring Strip (Ultra-compatto, salvaspazio) */
+#reviews .rv-header-scoring-strip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.03);
+  padding: 2.5px 8px;
+  border-radius: var(--radius-1);
+  border: 1px solid var(--color-8, rgba(0, 0, 0, 0.1));
+}
+#reviews .rv-header-score-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3.5px;
+  font-size: 11px;
+  font-family: var(--font-1);
+  color: var(--color-2);
+}
+#reviews .rv-header-score-item + .rv-header-score-item {
+  padding-left: 6px;
+  border-left: 1px solid var(--color-8, rgba(0, 0, 0, 0.12));
+}
+#reviews .rv-header-score-label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-4);
+}
+#reviews .rv-header-score-val {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-2);
+}
+#reviews .rv-header-score-item--malus .rv-header-score-val {
+  color: #dc2626;
+}
+#reviews .rv-header-score-item--total {
+  font-weight: 700;
+}
+#reviews .rv-header-score-item--total .rv-header-score-val {
+  font-size: 12.5px;
 }
 
 /* Back Face Body */
@@ -966,18 +1012,18 @@
   background: var(--color-4, #6b6b6b);
 }
 
-/* Pannelli minimali (sfondo naturale della tessera, bordi sottili) */
-#reviews .rv-back-panel {
+/* Cards minimali della colonna destra (coerenti con lo sfondo della scheda) */
+#reviews .rv-back-card {
   border: 1px solid var(--color-8, rgba(0, 0, 0, 0.12));
   border-radius: 6px;
-  padding: 9px 12px;
+  padding: 10px 14px;
   background: rgba(0, 0, 0, 0.015);
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 8px;
 }
 
-#reviews .rv-back-sec-title {
+#reviews .rv-back-card-title {
   font-family: var(--font-1);
   font-size: 10px;
   font-weight: 700;
@@ -987,255 +1033,200 @@
   margin: 0;
 }
 
-/* RIGA 1: Info Chiave (Sinistra) + Scoring (Destra) side-by-side */
-#reviews .rv-back-top-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1.32fr) minmax(0, 1.18fr);
-  gap: 9px;
-}
-
-#reviews .rv-back-panel--info {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-#reviews .rv-back-info-summary {
-  font-size: 10.5px;
-  line-height: 1.4;
+/* Informazioni Chiave: Trafiletto Unico senza divisori */
+#reviews .rv-back-prose {
+  font-family: var(--font-1);
+  font-size: 11.5px;
+  line-height: 1.5;
   color: var(--color-2);
   margin: 0;
 }
-#reviews .rv-back-info-subgrid {
-  display: flex;
-  flex-direction: column;
-  gap: 2.5px;
-  font-size: 10px;
-  line-height: 1.3;
-  color: var(--color-4);
-  border-top: 1px solid var(--color-8, rgba(0, 0, 0, 0.08));
-  padding-top: 4px;
-}
-#reviews .rv-back-info-tag {
+#reviews .rv-back-prose strong {
   font-weight: 700;
   color: var(--color-2);
 }
 
-/* Scoring Strip in Riga 1 */
-#reviews .rv-back-panel--scoring {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
+/* Doppio Matching Servizi CXI Pertinenti */
+#reviews .rv-back-card--cxi {
+  gap: 10px;
 }
-#reviews .rv-scoring-strip {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 5px;
-}
-#reviews .rv-scoring-cell {
-  border: 1px solid var(--color-8, rgba(0, 0, 0, 0.1));
-  border-radius: 4px;
-  padding: 4px 5px;
-  text-align: center;
-  background: rgba(0, 0, 0, 0.01);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-#reviews .rv-scoring-cell__label {
-  font-size: 8.5px;
-  font-weight: 600;
-  color: var(--color-4);
-  white-space: nowrap;
-}
-#reviews .rv-scoring-cell__val {
-  font-size: 14.5px;
-  font-weight: 700;
-  line-height: 1.1;
-  margin: 1px 0;
-  color: var(--color-2);
-}
-#reviews .rv-scoring-cell__sub {
-  font-size: 8.5px;
-  color: var(--color-4);
-}
-#reviews .rv-scoring-cell--minor {
-  border-style: dashed;
-  opacity: 0.8;
-}
-#reviews .rv-scoring-cell--total {
-  border: 1.5px solid var(--color-2);
-  background: rgba(0, 0, 0, 0.03);
-}
-#reviews .rv-scoring-note {
-  font-size: 9px;
-  line-height: 1.3;
-  color: var(--color-4);
-  margin: 0;
-  border-top: 1px solid var(--color-8, rgba(0, 0, 0, 0.08));
-  padding-top: 4px;
-}
-
-/* RIGA 2: CXI Matching */
-#reviews .rv-back-panel--cxi {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-#reviews .rv-cxi-block {
+#reviews .rv-cxi-item {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
-#reviews .rv-cxi-block--secondary {
-  border-top: 1px solid var(--color-8, rgba(0, 0, 0, 0.1));
-  padding-top: 7px;
+#reviews .rv-cxi-item--secondary {
+  border-top: 1px solid var(--color-8, rgba(0, 0, 0, 0.09));
+  padding-top: 8px;
+  margin-top: 2px;
 }
-#reviews .rv-cxi-head {
+#reviews .rv-cxi-head-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
 }
-#reviews .rv-cxi-badge {
+#reviews .rv-cxi-pill {
   display: inline-flex;
   align-items: center;
-  height: 20px;
-  padding: 0 8px;
+  height: 22px;
+  padding: 0 9px;
   border-radius: var(--radius-1);
-  font-size: 10px;
+  font-size: 10.5px;
   font-weight: 600;
   white-space: nowrap;
 }
-#reviews .rv-cxi-badge--primary {
+#reviews .rv-cxi-pill--primary {
   border: 1px solid var(--color-2);
   background: var(--color-2);
   color: var(--color-1);
 }
-#reviews .rv-cxi-badge--secondary {
+#reviews .rv-cxi-pill--secondary {
   border: 1px solid var(--color-2);
   background: transparent;
   color: var(--color-2);
 }
-#reviews .rv-cxi-badge--year {
-  border: 1px solid var(--color-8, rgba(0, 0, 0, 0.18));
+#reviews .rv-cxi-pill--year {
+  border: 1px solid var(--color-8, rgba(0, 0, 0, 0.16));
   background: transparent;
   color: var(--color-4);
-  font-size: 9.5px;
+  font-size: 10px;
 }
-#reviews .rv-cxi-copy-btn {
+
+/* Pulsanti Azione CXI (Bozza email, Copia) */
+#reviews .rv-action-btn {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   height: 22px;
   padding: 0 9px;
   border-radius: var(--radius-1);
-  border: 1px solid var(--color-2);
+  border: 1px solid var(--color-8, rgba(0, 0, 0, 0.16));
   background: transparent;
   color: var(--color-2);
   font-size: 10px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
 }
-#reviews .rv-cxi-copy-btn:hover {
+#reviews .rv-action-btn:hover {
+  border-color: var(--color-2);
+  background: rgba(0, 0, 0, 0.04);
+}
+#reviews .rv-action-btn--primary {
+  border-color: var(--color-2);
   background: var(--color-2);
   color: var(--color-1);
 }
-#reviews .rv-cxi-details {
-  display: flex;
-  flex-direction: column;
-  gap: 2.5px;
-  font-size: 10.5px;
-  line-height: 1.35;
-  color: var(--color-2);
-}
-#reviews .rv-cxi-details strong {
-  font-weight: 600;
-  color: var(--color-2);
+#reviews .rv-action-btn--primary:hover {
+  background: var(--color-2);
+  opacity: 0.92;
 }
 
-/* Gancio Mail Dedicato */
-#reviews .rv-email-block {
-  border: 1px solid var(--color-8, rgba(0, 0, 0, 0.12));
-  border-radius: 4px;
-  padding: 8px 10px;
-  background: rgba(0, 0, 0, 0.02);
+#reviews .rv-cxi-content {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin-top: 2px;
-}
-#reviews .rv-email-block__header {
-  font-size: 8.5px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--color-4);
-}
-#reviews .rv-email-block__subject {
-  font-size: 10px;
-  color: var(--color-2);
-  line-height: 1.3;
-}
-#reviews .rv-email-block__body {
-  font-size: 10px;
+  gap: 3.5px;
+  font-size: 11px;
   line-height: 1.4;
   color: var(--color-2);
 }
+#reviews .rv-cxi-content strong {
+  font-weight: 600;
+  color: var(--color-2);
+}
 
-/* RIGA 3: Buyer Personas (2 Colonne affiancate) */
-#reviews .rv-back-panel--personas {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
+/* Bozza Email (Espandibile / Collapsible) */
+#reviews .rv-email-drawer {
+  overflow: hidden;
+  margin-top: 4px;
 }
-#reviews .rv-personas-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 7px;
-}
-#reviews .rv-persona-box {
-  border: 1px solid var(--color-8, rgba(0, 0, 0, 0.1));
+#reviews .rv-email-box {
+  border: 1px solid var(--color-8, rgba(0, 0, 0, 0.12));
   border-radius: 4px;
-  padding: 7px 9px;
+  padding: 9px 11px;
+  background: rgba(0, 0, 0, 0.02);
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  background: rgba(0, 0, 0, 0.01);
-}
-#reviews .rv-persona-head {
-  display: flex;
-  align-items: center;
   gap: 5px;
 }
-#reviews .rv-persona-badge {
+#reviews .rv-email-header {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-4);
+}
+#reviews .rv-email-subject {
+  font-size: 10.5px;
+  color: var(--color-2);
+  line-height: 1.35;
+}
+#reviews .rv-email-subject strong {
+  font-weight: 700;
+}
+#reviews .rv-email-body {
+  font-size: 10.5px;
+  line-height: 1.45;
+  color: var(--color-2);
+  border-top: 1px solid var(--color-8, rgba(0, 0, 0, 0.08));
+  padding-top: 6px;
+}
+
+/* Buyer Personas Target con Selettore a Tab */
+#reviews .rv-persona-tabs {
   display: inline-flex;
   align-items: center;
-  padding: 1px 4px;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.04);
+  padding: 2px;
+  border-radius: var(--radius-1);
+}
+#reviews .rv-persona-tab {
+  font-family: var(--font-1);
+  font-size: 9.5px;
+  font-weight: 600;
+  color: var(--color-4);
+  background: transparent;
+  border: none;
+  padding: 2.5px 8px;
+  border-radius: calc(var(--radius-1) - 2px);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+#reviews .rv-persona-tab:hover {
+  color: var(--color-2);
+}
+#reviews .rv-persona-tab.is-active {
+  background: var(--color-2);
+  color: var(--color-1);
+}
+#reviews .rv-persona-view {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 4px;
+}
+#reviews .rv-persona-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 1.5px 5px;
   border-radius: 3px;
-  border: 1px solid var(--color-8, rgba(0, 0, 0, 0.15));
-  font-size: 8.5px;
+  border: 1px solid var(--color-8, rgba(0, 0, 0, 0.16));
+  font-size: 9px;
   font-weight: 600;
   color: var(--color-4);
 }
-#reviews .rv-persona-title {
-  font-family: var(--font-1);
-  font-size: 10.5px;
-  font-weight: 700;
-  color: var(--color-2);
-  margin: 0;
-}
-#reviews .rv-persona-lines {
+#reviews .rv-persona-rows {
   display: flex;
   flex-direction: column;
-  gap: 2.5px;
-  font-size: 9.5px;
-  line-height: 1.3;
+  gap: 3.5px;
+  font-size: 11px;
+  line-height: 1.4;
   color: var(--color-2);
 }
-#reviews .rv-persona-lines strong {
+#reviews .rv-persona-rows strong {
   font-weight: 600;
   color: var(--color-2);
 }
@@ -1258,11 +1249,10 @@
     border-bottom: 1px solid var(--color-8, rgba(0, 0, 0, 0.12));
     padding-bottom: 12px;
   }
-  #reviews .rv-back-top-row {
-    grid-template-columns: 1fr;
-  }
-  #reviews .rv-personas-grid {
-    grid-template-columns: 1fr;
+  #reviews .rv-header-scoring-strip {
+    order: 3;
+    width: 100%;
+    justify-content: space-around;
   }
   #reviews .rv-bottom-bar {
     flex-direction: column;
