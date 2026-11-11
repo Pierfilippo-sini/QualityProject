@@ -1033,7 +1033,7 @@ const MorphOrb = React.forwardRef<MorphOrbRef, MorphOrbProps>(function MorphOrb(
           data-params-open={isParamsOpen && phase === "idle" ? "true" : undefined}
           style={
             isParamsOpen && phase === "idle"
-              ? { transform: "translate(-50%, calc(-50% - 75px))" }
+              ? { transform: "translate(-50%, calc(-50% - 85px))" }
               : undefined
           }
         >
@@ -1064,61 +1064,63 @@ const MorphOrb = React.forwardRef<MorphOrbRef, MorphOrbProps>(function MorphOrb(
               onChange={onChange}
               onKeyDown={onKeyDown}
             />
-            {/* PARAMETERS TOGGLE BUTTON */}
-            <button
-              type="button"
-              className={`mo-params-toggle ${isParamsOpen ? "is-active" : ""}`}
-              aria-label="Filtri parametri"
-              aria-expanded={isParamsOpen}
-              title="Filtri parametri di ricerca"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setIsParamsOpen((prev) => !prev);
-              }}
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="4" y1="21" x2="4" y2="14" />
-                <line x1="4" y1="10" x2="4" y2="3" />
-                <line x1="12" y1="21" x2="12" y2="12" />
-                <line x1="12" y1="8" x2="12" y2="3" />
-                <line x1="20" y1="21" x2="20" y2="16" />
-                <line x1="20" y1="12" x2="20" y2="3" />
-                <line x1="1" y1="14" x2="7" y2="14" />
-                <line x1="9" y1="8" x2="15" y2="8" />
-                <line x1="17" y1="16" x2="23" y2="16" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              className="mo-send"
-              aria-label={COPY.send}
-              disabled={
-                !value.trim() &&
-                !params.dimensione.trim() &&
-                !params.area.trim() &&
-                !params.categoria.trim()
-              }
-              data-ready={
-                Boolean(
-                  value.trim() ||
-                    params.dimensione.trim() ||
-                    params.area.trim() ||
-                    params.categoria.trim()
-                )
-                  ? ""
-                  : undefined
-              }
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onFormSubmit(e);
-              }}
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 19V5M5 12l7-7 7 7" />
-              </svg>
-            </button>
+            <div className="mo-buttons-group">
+              {/* PARAMETERS TOGGLE BUTTON */}
+              <button
+                type="button"
+                className={`mo-params-toggle ${isParamsOpen ? "is-active" : ""}`}
+                aria-label="Filtri parametri"
+                aria-expanded={isParamsOpen}
+                title="Filtri parametri di ricerca"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setIsParamsOpen((prev) => !prev);
+                }}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="4" y1="21" x2="4" y2="14" />
+                  <line x1="4" y1="10" x2="4" y2="3" />
+                  <line x1="12" y1="21" x2="12" y2="12" />
+                  <line x1="12" y1="8" x2="12" y2="3" />
+                  <line x1="20" y1="21" x2="20" y2="16" />
+                  <line x1="20" y1="12" x2="20" y2="3" />
+                  <line x1="1" y1="14" x2="7" y2="14" />
+                  <line x1="9" y1="8" x2="15" y2="8" />
+                  <line x1="17" y1="16" x2="23" y2="16" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                className="mo-send"
+                aria-label={COPY.send}
+                disabled={
+                  !value.trim() &&
+                  !params.dimensione.trim() &&
+                  !params.area.trim() &&
+                  !params.categoria.trim()
+                }
+                data-ready={
+                  Boolean(
+                    value.trim() ||
+                      params.dimensione.trim() ||
+                      params.area.trim() ||
+                      params.categoria.trim()
+                  )
+                    ? ""
+                    : undefined
+                }
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onFormSubmit(e);
+                }}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 19V5M5 12l7-7 7 7" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           <canvas className="mo-orb" ref={canvasRef} aria-hidden="true" />
@@ -1139,36 +1141,42 @@ const MorphOrb = React.forwardRef<MorphOrbRef, MorphOrbProps>(function MorphOrb(
           </div>
         </div>
 
-        {/* 3 PARAMETERS BOXES DROPDOWN */}
+        {/* 3 PARAMETERS BOXES DROPDOWN (ORDINE: Categoria, Area Geografica, Dimensione) */}
         <AnimatePresence>
           {isParamsOpen && phase === "idle" && (
             <motion.div
               key="mo-params-dropdown"
               className="mo-params-dropdown"
-              initial={{ opacity: 0, y: -45, scale: 0.98 }}
-              animate={{ opacity: 1, y: -26, scale: 1 }}
+              initial={{ opacity: 0, x: "-50%", y: -30, scale: 0.98 }}
+              animate={{ opacity: 1, x: "-50%", y: -8, scale: 1 }}
               exit={{
                 opacity: 0,
-                y: -45,
+                x: "-50%",
+                y: -30,
                 scale: 0.98,
                 transition: { duration: 0.15 },
               }}
               transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
             >
-              {/* Box 1: Dimensione */}
+              {/* Tab 1: Categoria */}
               <div className="mo-param-box">
                 <div className="mo-param-head">
-                  <Building2 className="w-4 h-4 text-zinc-400" />
-                  <span className="mo-param-title">Dimensione</span>
+                  <Folder className="w-4 h-4 text-zinc-400" />
+                  <span className="mo-param-title">Categoria</span>
                 </div>
-                <span className="mo-param-subtitle">Fatturato o Dipendenti</span>
+                <span
+                  className="mo-param-subtitle mo-param-subtitle--empty"
+                  aria-hidden="true"
+                >
+                  &nbsp;
+                </span>
                 <input
                   type="text"
                   className="mo-param-input"
-                  placeholder="Es. 10M - 50M €"
-                  value={params.dimensione}
+                  placeholder="Es. SaaS, Manifatturiero"
+                  value={params.categoria}
                   onChange={(e) =>
-                    setParams((p) => ({ ...p, dimensione: e.target.value }))
+                    setParams((p) => ({ ...p, categoria: e.target.value }))
                   }
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
@@ -1179,7 +1187,7 @@ const MorphOrb = React.forwardRef<MorphOrbRef, MorphOrbProps>(function MorphOrb(
                 />
               </div>
 
-              {/* Box 2: Area Geografica */}
+              {/* Tab 2: Area Geografica */}
               <div className="mo-param-box">
                 <div className="mo-param-head">
                   <MapPin className="w-4 h-4 text-zinc-400" />
@@ -1208,25 +1216,20 @@ const MorphOrb = React.forwardRef<MorphOrbRef, MorphOrbProps>(function MorphOrb(
                 />
               </div>
 
-              {/* Box 3: Categoria */}
+              {/* Tab 3: Dimensione */}
               <div className="mo-param-box">
                 <div className="mo-param-head">
-                  <Folder className="w-4 h-4 text-zinc-400" />
-                  <span className="mo-param-title">Categoria</span>
+                  <Building2 className="w-4 h-4 text-zinc-400" />
+                  <span className="mo-param-title">Dimensione</span>
                 </div>
-                <span
-                  className="mo-param-subtitle mo-param-subtitle--empty"
-                  aria-hidden="true"
-                >
-                  &nbsp;
-                </span>
+                <span className="mo-param-subtitle">Fatturato o Dipendenti</span>
                 <input
                   type="text"
                   className="mo-param-input"
-                  placeholder="Es. SaaS, Manifatturiero"
-                  value={params.categoria}
+                  placeholder="Es. 10M - 50M €"
+                  value={params.dimensione}
                   onChange={(e) =>
-                    setParams((p) => ({ ...p, categoria: e.target.value }))
+                    setParams((p) => ({ ...p, dimensione: e.target.value }))
                   }
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
