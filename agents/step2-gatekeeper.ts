@@ -49,6 +49,7 @@ export interface VerifiedGatekeeperCompany {
   fatturatoValore: number | null;
   fatturatoAnno: number | null;
   dipendenti: number | null;
+  logoUrl?: string | null;
   sources: Source[];
 }
 
@@ -768,6 +769,7 @@ export async function analyzeSingleCandidateInIsolation(
       fatturatoValore: rev,
       fatturatoAnno: revYear,
       dipendenti: employees,
+      logoUrl: siteCtx.logoUrl ?? null,
       sources: validSources,
     },
     searchQueries: res.searchQueries,

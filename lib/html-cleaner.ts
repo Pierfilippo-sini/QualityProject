@@ -144,7 +144,130 @@ export interface CleanWebsiteContext {
   reachable: boolean;
   cleanText: string;
   extractedVat: string | null;
+  logoUrl?: string | null;
   financials?: ExtractedFinancials;
+}
+
+const NON_COMPANY_LOGO_HOSTS = [
+  "reportaziende.it",
+  "fatturatoitalia.it",
+  "ufficiocamerale.it",
+  "registroimprese.it",
+  "aziende.it",
+  "informazione-aziende.it",
+  "companyreports.it",
+  "cerved.com",
+  "vertexaisearch.cloud.google.com",
+  "wikipedia.org",
+  "paginegialle.it",
+  "infocamere.it",
+  "linkedin.com",
+  "google.com",
+];
+
+function extractHtmlAttr(tag: string, attrName: string): string | null {
+  const re = new RegExp(
+    `\\b${attrName}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]+))`,
+    "i"
+  );
+  const m = tag.match(re);
+  const val = m?.[1] ?? m?.[2] ?? m?.[3] ?? "";
+  return val.trim() || null;
+}
+
+function resolveAbsoluteHttpUrl(
+  rawHref: string | null,
+  baseUrl: string
+): string | null {
+  if (!rawHref) return null;
+  const cleaned = rawHref.replace(/&amp;/gi, "&").trim();
+  if (
+    !cleaned ||
+    cleaned.startsWith("data:") ||
+    cleaned.startsWith("javascript:")
+  ) {
+    return null;
+  }
+  try {
+    const resolved = new URL(cleaned, baseUrl);
+    if (resolved.protocol !== "http:" && resolved.protocol !== "https:") {
+      return null;
+    }
+    return resolved.href;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Estrae dall'HTML grezzo del sito ufficiale l'URL assoluto del logo/icona aziendale
+ * (priorità: apple-touch-icon -> icon -> og:image), risolvendo eventuali path relativi
+ * rispetto al dominio finale ed escludendo portali/directory terze.
+ */
+export function extractLogoUrlFromHtml(
+  rawHtml: string,
+  baseUrl: string
+): string | null {
+  if (!rawHtml || !baseUrl) return null;
+  try {
+    const host = new URL(baseUrl).hostname.toLowerCase();
+    if (NON_COMPANY_LOGO_HOSTS.some((blocked) => host.includes(blocked))) {
+      return null;
+    }
+  } catch {
+    return null;
+  }
+
+  const headMatch = rawHtml.match(/<head\b[^>]*>[\s\S]*?<\/head>/i);
+  const headHtml = headMatch ? headMatch[0] : rawHtml.slice(0, 32_000);
+
+  let appleTouchIcon: string | null = null;
+  let standardIcon: string | null = null;
+  let ogImage: string | null = null;
+
+  const linkTags = headHtml.match(/<link\b[^>]*>/gi) ?? [];
+  for (const tag of linkTags) {
+    const rel = (extractHtmlAttr(tag, "rel") || "").toLowerCase();
+    const href = extractHtmlAttr(tag, "href");
+    if (!rel || !href) continue;
+
+    if (rel.includes("apple-touch-icon")) {
+      const resolved = resolveAbsoluteHttpUrl(href, baseUrl);
+      if (resolved && !appleTouchIcon) {
+        appleTouchIcon = resolved;
+      }
+    } else if (/\bicon\b/.test(rel) && !rel.includes("mask-icon")) {
+      const resolved = resolveAbsoluteHttpUrl(href, baseUrl);
+      if (resolved) {
+        if (
+          !standardIcon ||
+          (standardIcon.toLowerCase().endsWith(".ico") &&
+            !resolved.toLowerCase().endsWith(".ico"))
+        ) {
+          standardIcon = resolved;
+        }
+      }
+    }
+  }
+
+  const metaTags = headHtml.match(/<meta\b[^>]*>/gi) ?? [];
+  for (const tag of metaTags) {
+    const prop = (
+      extractHtmlAttr(tag, "property") ||
+      extractHtmlAttr(tag, "name") ||
+      ""
+    ).toLowerCase();
+    if (prop === "og:image" || prop === "og:image:secure_url") {
+      const content = extractHtmlAttr(tag, "content");
+      const resolved = resolveAbsoluteHttpUrl(content, baseUrl);
+      if (resolved) {
+        ogImage = resolved;
+        break;
+      }
+    }
+  }
+
+  return appleTouchIcon || standardIcon || ogImage || null;
 }
 
 export const FINANCIAL_DIRECTORY_DOMAINS = [
@@ -319,6 +442,10 @@ export async function fetchCleanWebsiteContext(
       }
     }
 
+    // Estrai logo/icona aziendale dal markup HTML originale prima della pulizia
+    const finalUrl = res.url || parsed.href;
+    const logoUrl = extractLogoUrlFromHtml(rawHtml, finalUrl);
+
     // Estrai eventuali meta description o JSON-LD prima di tagliare/strippare gli script
     const metaDescMatch = rawHtml.match(
       /<meta\s+(?:name|property)=["'](?:description|og:description)["']\s+content=["']([^"']+)["']/i
@@ -339,6 +466,7 @@ export async function fetchCleanWebsiteContext(
       reachable: true,
       cleanText,
       extractedVat,
+      logoUrl,
       financials,
     };
   } catch {

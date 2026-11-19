@@ -672,16 +672,7 @@ export async function executeB2BScoutingPipeline(
 
         if (singleRanked) {
           streamedCompaniesBuffer.push(singleRanked);
-          // Invia immediatamente al frontend se rientra provvisoriamente nelle top X richieste
-          const currentTopIds = new Set(
-            [...streamedCompaniesBuffer]
-              .sort((a, b) => b.scoreFinal - a.scoreFinal)
-              .slice(0, constraints.requestedCount)
-              .map((c) => c.id)
-          );
-          if (currentTopIds.has(singleRanked.id)) {
-            callbacks?.onCompany?.(singleRanked);
-          }
+          callbacks?.onCompany?.(singleRanked);
         }
       })();
 
@@ -905,6 +896,7 @@ export async function executeB2BScoutingPipeline(
         w_trigger: wTrigger,
       },
       ranked_companies: finalRanked,
+      all_scored_companies: allRanked,
       debug_trace: telemetry.getSnapshot(),
     };
   } catch (error) {

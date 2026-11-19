@@ -115,11 +115,12 @@ export default function IntroSequence({
               typingSpeed={76}
               rotationInterval={2000}
               deletingSpeed={32}
+              startDelayMs={380}
               singleCycleWithBackspace={true}
               startTrigger={true}
-              showCursor={false}
+              showCursor={true}
               onSequenceComplete={handleTypingSequenceComplete}
-              className="font-[family-name:var(--font-1)] text-4xl font-medium tracking-[-0.03em] text-[#0b0b0b] sm:text-6xl md:text-[74px]"
+              className="pr-[2px] font-[family-name:var(--font-1)] text-4xl font-medium tracking-[-0.03em] text-[#0b0b0b] sm:text-6xl md:text-[74px]"
             />
           </motion.div>
         )}

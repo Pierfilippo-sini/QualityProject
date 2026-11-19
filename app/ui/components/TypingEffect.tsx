@@ -15,6 +15,7 @@ export interface TypingEffectProps {
   rotationInterval?: number;
   typingSpeed?: number;
   deletingSpeed?: number;
+  startDelayMs?: number;
   singleCycleWithBackspace?: boolean;
   typeOnce?: boolean;
   startTrigger?: boolean;
@@ -31,6 +32,7 @@ export const TypingEffect = ({
   rotationInterval = 3000,
   typingSpeed = 150,
   deletingSpeed = 35,
+  startDelayMs = 0,
   singleCycleWithBackspace = false,
   typeOnce = false,
   startTrigger = true,
@@ -41,6 +43,7 @@ export const TypingEffect = ({
   const [displayedText, setDisplayedText] = useState("");
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
   const [charIndex, setCharIndex] = useState(0);
+  const [hasStarted, setHasStarted] = useState(startDelayMs <= 0);
   const [mode, setMode] = useState<"typing" | "pausing" | "deleting" | "done">(
     "typing"
   );
@@ -58,7 +61,15 @@ export const TypingEffect = ({
   }, [displayedText]);
 
   useEffect(() => {
-    if (!startTrigger) return;
+    if (!startTrigger || hasStarted) return;
+    const delayTimer = setTimeout(() => {
+      setHasStarted(true);
+    }, startDelayMs);
+    return () => clearTimeout(delayTimer);
+  }, [startTrigger, hasStarted, startDelayMs]);
+
+  useEffect(() => {
+    if (!startTrigger || !hasStarted) return;
 
     if (typeOnce) {
       if (charIndex < currentText.length) {
@@ -128,6 +139,7 @@ export const TypingEffect = ({
     charIndex,
     currentText,
     deletingSpeed,
+    hasStarted,
     mode,
     rotationInterval,
     singleCycleWithBackspace,
@@ -147,14 +159,16 @@ export const TypingEffect = ({
       <span>{displayedText}</span>
       {showCursor && mode !== "done" && (
         <motion.span
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          aria-hidden="true"
+          initial={{ opacity: 1 }}
+          animate={{ opacity: [1, 1, 0, 0] }}
           transition={{
-            duration: 0.6,
+            duration: 0.78,
+            times: [0, 0.48, 0.5, 1],
             repeat: Infinity,
-            repeatType: "reverse",
+            ease: "linear",
           }}
-          className="ml-1 inline-block h-[0.88em] w-[3px] shrink-0 rounded-sm bg-current"
+          className="ml-[3px] inline-block h-[0.88em] w-[3px] shrink-0 rounded-sm bg-current"
         />
       )}
     </div>

@@ -123,6 +123,7 @@ export interface CompanyResult {
   mapsCoordinates?: { latitude: number; longitude: number } | null;
   mapsPhone?: string | null;
   mapsWebsiteUri?: string | null;
+  logoUrl?: string | null;
   atecoCodice: string | "N.D.";
 
   // Clusterizzazione Standardizzata GICS/ATECO B2B
@@ -248,6 +249,7 @@ export interface ScoutResponsePayload {
   text_response: string;
   slider_weights: { w_target: number; w_trigger: number };
   ranked_companies: CompanyResult[];
+  all_scored_companies?: CompanyResult[];
   debug_trace: DebugTrace;
 }
 

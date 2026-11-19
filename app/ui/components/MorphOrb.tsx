@@ -21,6 +21,7 @@ export interface MorphOrbParams {
   dimensione: string;
   area: string;
   categoria: string;
+  isDemo?: boolean;
 }
 
 export interface MorphOrbRef {
@@ -37,12 +38,12 @@ export interface MorphOrbProps {
 }
 
 /* ─────────────────────────── geometry ─────────────────────────── */
-const PILL_H = 60, BALL_SMALL = 60, ORB_D = 132, ORB_R = 66, CANVAS = 220;
+const PILL_H = 60, BALL_SMALL = 54, ORB_D = 96, ORB_R = 48, CANVAS = 220;
 const CARD_H = 108;
-const FLY_D = 138;
+const FLY_D = 100;
 const pillW = () => Math.min(560, window.innerWidth - 32);
 const cardW = () => Math.min(320, window.innerWidth - 32);
-const homeDy = () => window.innerHeight * 0.54 - 175; // positioned comfortably higher up; stage centre is at top:46%
+const homeDy = () => window.innerHeight * 0.84 - 175; // Barra input in basso e centrata in idle (a window.innerHeight - 175px); il volo del cerchio finisce in alto a top:16% dove compare il globo
 
 /* ───────────────────────── math + easing ───────────────────────── */
 type Ease = (t: number) => number;
@@ -647,12 +648,26 @@ function createRuntime(env: Env): Runtime {
         env.ui.swapLabel(COPY.done);
         await go(RESOLVE);
 
-        // Stop here: keep particle globe rotating in emerald green
+        // Il globo gira ancora per 1 secondo con la scritta Done
         orb.P.sweep = 1;
         orb.P.spin = 0.25;
         orb.P.floor = 0.95;
         orb.P.k = 1;
         orb.P.alpha = 1;
+        orb.ensure();
+
+        await sleep(1000, sig);
+
+        // Poi sparisce completamente
+        await play([
+          T("orb.alpha", 1, 0, 0, 500, E.out),
+          T("sOp", 1, 0, 0, 400, E.out),
+          T("oHalo", vals.oHalo ?? 0, 0, 0, 400, E.out),
+          T("cHalo", vals.cHalo ?? 0, 0, 0, 400, E.out),
+        ], sig);
+        orb.P.alpha = 0;
+        orb.P.k = 0;
+        orb.P.spin = 0;
         orb.ensure();
       } else {
         env.ui.setPhase("resolve");
@@ -660,6 +675,13 @@ function createRuntime(env: Env): Runtime {
         await go(R_RESOLVE);
         orb.P.sweep = 1;
         orb.ensure();
+
+        await sleep(1000, sig);
+        await play([
+          T("orb.alpha", 1, 0, 0, 300, E.out),
+          T("sOp", 1, 0, 0, 300, E.out),
+        ], sig);
+        orb.P.alpha = 0;
       }
 
       env.ui.setPhase("answered");
@@ -812,7 +834,7 @@ const MorphOrb = React.forwardRef<MorphOrbRef, MorphOrbProps>(function MorphOrb(
       const demoText =
         customPrompt ||
         "Cercami 5 aziende a Milano nel settore SaaS con fatturato 10M - 50M €";
-      const demoParams = customParams || {
+      const demoParams: MorphOrbParams = customParams || {
         dimensione: "10M - 50M €",
         area: "Milano",
         categoria: "SaaS & Digital Tech",
@@ -826,7 +848,7 @@ const MorphOrb = React.forwardRef<MorphOrbRef, MorphOrbProps>(function MorphOrb(
       window.setTimeout(() => {
         lastTextRef.current = demoText;
         inputRef.current?.blur();
-        rt.start(demoText, makeCfg(demoParams));
+        rt.start(demoText, makeCfg({ ...demoParams, isDemo: true }));
       }, hadOpen ? 160 : 0);
     },
   }));
@@ -1057,7 +1079,6 @@ const MorphOrb = React.forwardRef<MorphOrbRef, MorphOrbProps>(function MorphOrb(
               className="mo-field"
               type="text"
               value={value}
-              maxLength={200}
               placeholder={COPY.placeholder}
               aria-label="Chiedi all'agente CompanyHunter"
               spellCheck={false}

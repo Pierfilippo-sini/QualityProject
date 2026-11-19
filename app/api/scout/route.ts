@@ -1,6 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { executeB2BScoutingPipeline } from "@/agents/orchestrator";
-import { SESSION_COOKIE_NAME, verifySessionToken } from "@/lib/auth";
+import {
+  DEFAULT_ACCESS_GATE_SECRET,
+  DEFAULT_BRAIN_GATE_SECRET,
+  SESSION_COOKIE_NAME,
+  verifySessionTokenWithTarget,
+} from "@/lib/auth";
 import type {
   DebugTrace,
   MandatorySearchInput,
@@ -16,12 +21,12 @@ import type {
  */
 export async function POST(request: NextRequest) {
   const sessionToken = request.cookies.get(SESSION_COOKIE_NAME)?.value;
-  const isAuthenticated = await verifySessionToken(
-    sessionToken,
-    process.env.ACCESS_GATE_SECRET
-  );
+  const session = await verifySessionTokenWithTarget(sessionToken, [
+    process.env.ACCESS_GATE_SECRET || DEFAULT_ACCESS_GATE_SECRET,
+    process.env.BRAIN_GATE_SECRET || DEFAULT_BRAIN_GATE_SECRET,
+  ]);
 
-  if (!isAuthenticated) {
+  if (!session.valid) {
     return NextResponse.json(
       {
         error:

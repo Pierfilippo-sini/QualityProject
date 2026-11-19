@@ -274,10 +274,10 @@
 }
 
 #opening .op-globe-hero {
-  width: clamp(290px, 38.5vw, 590px);
-  height: clamp(290px, 38.5vw, 590px);
-  max-width: 72svh;
-  max-height: 72svh;
+  width: clamp(348px, 46.2vw, 708px);
+  height: clamp(348px, 46.2vw, 708px);
+  max-width: 86.4svh;
+  max-height: 86.4svh;
   pointer-events: auto;
 }
 
@@ -477,7 +477,8 @@
 #team .tm-h { margin-bottom: 12px; }
 #team .tm-sub { margin-bottom: clamp(40px, 7vh, 80px); color: var(--color-4); margin-left: var(--space-1); }
 #team .tm-row { position: relative; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: clamp(8px, 1.2vw, 18px); margin: 0 var(--space-1) 0 var(--space-1); }
-#team .tm-card { display: grid; align-content: start; gap: 8px; background: var(--color-1); }
+#team .tm-card { display: grid; align-content: start; gap: 8px; background: transparent; }
+#team .tm-card-info { background: var(--color-1); display: flex; flex-direction: column; gap: 8px; padding: 4px 0; border-radius: 4px; }
 #team .tm-photo { aspect-ratio: 3 / 4; overflow: hidden; margin-bottom: 8px; }
 
 #team .tm-glass-card {
@@ -604,15 +605,31 @@
 
 /* Section: Reviews / Company Ranking Carousel */
 #reviews { position: relative; padding: clamp(110px, 18vh, 200px) 0 clamp(60px, 10vh, 120px); }
-#reviews .rv-h { margin-bottom: clamp(48px, 9vh, 96px); }
-#reviews .rv-stack { position: relative; margin: 0 var(--space-1) 0 var(--space-2); }
+#reviews .rv-h {
+  margin-bottom: clamp(48px, 9vh, 96px);
+  margin-left: clamp(96px, 12vw, 190px);
+  padding: 0;
+}
+#reviews .rv-h .l-a {
+  display: block;
+  margin-left: 0;
+}
+#reviews .rv-h .l-b {
+  display: block;
+  margin-left: 2.01em;
+}
+#reviews .rv-stack {
+  position: relative;
+  margin: 0 var(--space-1) 0 clamp(96px, 12vw, 190px);
+}
 #reviews .rv-sheet {
   position: sticky;
-  top: calc(12vh + var(--i, 0) * 16px);
+  top: clamp(80px, 11vh, 105px);
+  z-index: calc(10 + var(--i, 0));
   min-height: min(62vh, 560px);
   height: min(62vh, 560px);
   max-height: min(62vh, 560px);
-  margin-bottom: 18vh;
+  margin-bottom: clamp(140px, 20vh, 200px);
   perspective: 1600px;
   padding: 0 !important;
   background: transparent !important;
@@ -668,7 +685,7 @@
 }
 
 #reviews .rv-card-top { display: flex; flex-direction: column; gap: clamp(18px, 3vh, 32px); }
-#reviews .rv-rank-block { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+#reviews .rv-rank-block { display: inline-flex; flex-direction: row; align-items: center; gap: 14px; }
 #reviews .rv-rank-number { font-size: clamp(42px, 5.4vw, 84px); line-height: 0.9; letter-spacing: -0.04em; font-weight: 500; }
 #reviews .rv-rank-number.is-in-rank { color: var(--color-2); }
 #reviews .rv-rank-number.is-out { color: var(--color-6); }
@@ -745,18 +762,18 @@
   align-items: center;
   justify-content: center;
   font-family: var(--font-1);
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.04em;
-  padding: 2.5px 7px;
+  padding: 3px 9px;
   border-radius: var(--radius-1);
   background: var(--color-2);
   color: var(--color-1);
 }
 #reviews .rv-back-company-name {
   font-family: var(--font-1);
-  font-size: clamp(13px, 1.1vw, 15px);
-  font-weight: 600;
+  font-size: clamp(16px, 1.35vw, 20px);
+  font-weight: 700;
   letter-spacing: -0.01em;
   color: var(--color-2);
   margin: 0;
@@ -764,15 +781,15 @@
 #reviews .rv-back-return-btn {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   font-family: var(--font-1);
-  font-size: 11px;
+  font-size: 12.5px;
   font-weight: 600;
   color: var(--color-4);
   background: transparent;
   border: 1px solid var(--color-8, rgba(0, 0, 0, 0.14));
   border-radius: var(--radius-1);
-  padding: 3.5px 11px;
+  padding: 4px 13px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -782,37 +799,37 @@
   transform: translateX(-2px);
 }
 
-/* Header Scoring Strip (Ultra-compatto, salvaspazio) */
+/* Header Scoring Strip (Compatto, salvaspazio e ben leggibile) */
 #reviews .rv-header-scoring-strip {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   background: rgba(0, 0, 0, 0.03);
-  padding: 2.5px 8px;
+  padding: 3px 10px;
   border-radius: var(--radius-1);
   border: 1px solid var(--color-8, rgba(0, 0, 0, 0.1));
 }
 #reviews .rv-header-score-item {
   display: inline-flex;
   align-items: baseline;
-  gap: 3.5px;
-  font-size: 11px;
+  gap: 4px;
+  font-size: 12px;
   font-family: var(--font-1);
   color: var(--color-2);
 }
 #reviews .rv-header-score-item + .rv-header-score-item {
-  padding-left: 6px;
+  padding-left: 8px;
   border-left: 1px solid var(--color-8, rgba(0, 0, 0, 0.12));
 }
 #reviews .rv-header-score-label {
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--color-4);
 }
 #reviews .rv-header-score-val {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--color-2);
 }
@@ -820,17 +837,22 @@
   color: #dc2626;
 }
 #reviews .rv-header-score-item--total {
-  font-weight: 700;
+  font-weight: 800;
 }
 #reviews .rv-header-score-item--total .rv-header-score-val {
-  font-size: 12.5px;
+  font-size: 15px;
+  color: #d12a1e !important;
+  font-weight: 800;
+}
+#reviews .rv-header-score-item--total span:last-child {
+  color: rgba(209, 42, 30, 0.75);
 }
 
-/* Back Face Body */
+/* Back Face Body: Colonna sinistra più larga per accogliere i font ingranditi */
 #reviews .rv-back-body {
   display: grid;
-  grid-template-columns: clamp(130px, 14.5%, 155px) minmax(0, 1fr);
-  gap: clamp(14px, 1.8vw, 22px);
+  grid-template-columns: clamp(190px, 18vw, 240px) minmax(0, 1fr);
+  gap: clamp(18px, 2.2vw, 32px);
   align-items: stretch;
   flex: 1;
   min-height: 0;
@@ -838,12 +860,12 @@
   padding-top: 8px;
 }
 
-/* Colonna sinistra ultra-compatta (sfondo nativo della tessera) */
+/* Colonna sinistra estesa e chiara */
 #reviews .rv-back-col-left {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding-right: 12px;
+  gap: 8px;
+  padding-right: 14px;
   border-right: 1px solid var(--color-8, rgba(0, 0, 0, 0.12));
   height: 100%;
   min-height: 0;
@@ -851,15 +873,15 @@
 #reviews .rv-back-field {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
 }
 #reviews .rv-back-field__label-row {
   display: flex;
   align-items: center;
-  gap: 4.5px;
+  gap: 5px;
 }
 #reviews .rv-back-field__label {
-  font-size: 9.5px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -871,21 +893,21 @@
 }
 #reviews .rv-back-field__val {
   font-family: var(--font-1);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
   color: var(--color-2);
   word-break: break-word;
 }
 #reviews .rv-back-field__val--strong {
-  font-size: 13.5px;
+  font-size: 16px;
   font-weight: 700;
   letter-spacing: -0.01em;
 }
 #reviews .rv-back-field__link {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-size: 10.5px;
+  gap: 5px;
+  font-size: 12.5px;
   color: var(--color-2);
   text-decoration: none;
   transition: color 0.2s;
@@ -898,7 +920,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 125px;
+  max-width: 195px;
 }
 
 /* Fonti a cascata (la voce più in basso nella colonna sinistra!) */
@@ -1042,9 +1064,9 @@
 
 #reviews .rv-back-card-title {
   font-family: var(--font-1);
-  font-size: 11.5px;
+  font-size: 13px;
   font-weight: 800;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--color-4);
   margin: 0;
@@ -1053,8 +1075,8 @@
 /* Informazioni Chiave: Trafiletto Unico senza divisori */
 #reviews .rv-back-prose {
   font-family: var(--font-1);
-  font-size: 13px;
-  line-height: 1.55;
+  font-size: 14.5px;
+  line-height: 1.6;
   color: var(--color-2);
   margin: 0;
 }
@@ -1062,7 +1084,7 @@
 /* Parole chiave in evidenza (grassetto + sottolineate) */
 #reviews .rv-back-emphasis {
   font-weight: 700;
-  font-size: 13.5px;
+  font-size: 15px;
   text-decoration: underline;
   text-decoration-thickness: 1.5px;
   text-underline-offset: 3px;
@@ -1093,10 +1115,10 @@
 #reviews .rv-cxi-pill {
   display: inline-flex;
   align-items: center;
-  height: 28px;
-  padding: 0 12px;
+  height: 30px;
+  padding: 0 14px;
   border-radius: var(--radius-1);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   white-space: nowrap;
 }
@@ -1104,38 +1126,38 @@
   border: 1px solid var(--color-2);
   background: var(--color-2);
   color: var(--color-1);
-  font-size: 13.5px;
+  font-size: 14.5px;
   font-weight: 800;
 }
 #reviews .rv-cxi-pill--secondary {
   border: 1px solid var(--color-2);
   background: transparent;
   color: var(--color-2);
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 700;
 }
 #reviews .rv-cxi-pill--year {
   border: 1px solid var(--color-8, rgba(0, 0, 0, 0.18));
   background: transparent;
   color: var(--color-4);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
-  height: 24px;
-  padding: 0 8px;
+  height: 26px;
+  padding: 0 10px;
 }
 
 /* Pulsanti Azione CXI (Bozza email, Copia) */
 #reviews .rv-action-btn {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  height: 26px;
-  padding: 0 11px;
+  gap: 6px;
+  height: 28px;
+  padding: 0 13px;
   border-radius: var(--radius-1);
   border: 1px solid var(--color-8, rgba(0, 0, 0, 0.18));
   background: transparent;
   color: var(--color-2);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1198,14 +1220,15 @@
 #reviews .rv-email-subject {
   font-size: 12px;
   color: var(--color-2);
-  line-height: 1.4;
+  font-size: 13.5px;
+  line-height: 1.5;
 }
 #reviews .rv-email-subject strong {
   font-weight: 700;
 }
 #reviews .rv-email-body {
-  font-size: 12px;
-  line-height: 1.55;
+  font-size: 13.5px;
+  line-height: 1.6;
   color: var(--color-2);
   border-top: 1px solid var(--color-8, rgba(0, 0, 0, 0.1));
   padding-top: 8px;
@@ -1215,19 +1238,19 @@
 #reviews .rv-persona-tabs {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   background: rgba(0, 0, 0, 0.05);
-  padding: 2.5px;
+  padding: 3px;
   border-radius: var(--radius-1);
 }
 #reviews .rv-persona-tab {
   font-family: var(--font-1);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--color-4);
   background: transparent;
   border: none;
-  padding: 4px 12px;
+  padding: 5px 14px;
   border-radius: calc(var(--radius-1) - 2px);
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1244,23 +1267,23 @@
 #reviews .rv-persona-view {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding-top: 4px;
+  gap: 9px;
+  padding-top: 5px;
 }
 #reviews .rv-persona-tag {
   display: inline-flex;
   align-items: center;
-  padding: 2px 7px;
+  padding: 3px 8px;
   border-radius: 4px;
   border: 1px solid var(--color-6, #d12a1e);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--color-6, #d12a1e);
   background: rgba(209, 42, 30, 0.06);
 }
 #reviews .rv-persona-role-title {
   font-family: var(--font-1);
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 800;
   color: var(--color-2);
   margin: 0;
@@ -1268,9 +1291,9 @@
 #reviews .rv-persona-rows {
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  font-size: 13px;
-  line-height: 1.5;
+  gap: 6px;
+  font-size: 14.5px;
+  line-height: 1.6;
   color: var(--color-2);
 }
 

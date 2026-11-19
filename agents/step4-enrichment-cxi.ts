@@ -487,6 +487,7 @@ export async function enrichSingleCompanyStep4(
       mapsCoordinates: company.mapsCoordinates,
       mapsPhone: company.mapsPhone,
       mapsWebsiteUri: company.mapsWebsiteUri,
+      logoUrl: company.logoUrl ?? null,
       atecoCodice: company.atecoCodice,
       cluster_macro: company.cluster_macro,
       sub_cluster_specifico: company.sub_cluster_specifico,

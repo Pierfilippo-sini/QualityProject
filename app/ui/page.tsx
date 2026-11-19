@@ -10,9 +10,58 @@ import HeroShutterText from "./components/HeroShutterText";
 import TypingEffect from "./components/TypingEffect";
 import { GlassFilter } from "@/components/ui/liquid-glass-button";
 import { simulateCompanyHunterSearch } from "@/lib/company-hunter-simulator";
+import AgentRankingRace, { type CompanyCandidate } from "@/components/scout/AgentRankingRace";
+import type { NonClassificataItem } from "@/components/ui/bar-race-chart";
+import type { CompanyDossier } from "@/lib/company-dossier";
+import type {
+  CompanyResult,
+  DiscardedCompanyTrace,
+  MandatorySearchInput,
+  ScoutStreamEvent,
+} from "@/lib/types";
 import "./evenkeel.css";
 
 const INITIAL_RANKED_COMPANIES: RankedCompanyItem[] = [
+  {
+    rank: 7,
+    name: "Vortex SecOps S.p.A.",
+    revenue: 15800000,
+    employees: 105,
+    cluster: "Cloud Security",
+    subcategory: "SecOps & Cloud Compliance",
+    headquartersCity: "Genova (GE)",
+    fullAddress: "Via XX Settembre 42, 16121 Genova (GE)",
+    phone: "+39 010 595 8800",
+    website: "https://www.vortexsecops.it",
+    pIva: "IT02719280105",
+    bersaglioScore: 7.8,
+    triggerScore: 9.7,
+    sources: [
+      { title: "Registro Imprese — C.C.I.A.A. Genova", url: "https://www.registroimprese.it" },
+      { title: "FatturatoItalia — Dati 2024", url: "https://www.fatturatoitalia.it" },
+      { title: "Google Maps — Sede verificata", url: "https://maps.google.com" },
+    ],
+  },
+  {
+    rank: 6,
+    name: "Aura Neural Labs S.r.l.",
+    revenue: 11400000,
+    employees: 78,
+    cluster: "Computer Vision",
+    subcategory: "OCR & Cognitive Automation",
+    headquartersCity: "Verona (VR)",
+    fullAddress: "Corso Porta Nuova 11, 37122 Verona (VR)",
+    phone: "+39 045 801 2345",
+    website: "https://www.auraneural.it",
+    pIva: "IT04728190234",
+    bersaglioScore: 9.7,
+    triggerScore: 7.9,
+    sources: [
+      { title: "Registro Imprese — C.C.I.A.A. Verona", url: "https://www.registroimprese.it" },
+      { title: "ReportAziende — Dati camerali 2024", url: "https://www.reportaziende.it" },
+      { title: "Google Maps — Sede operativa verificata", url: "https://maps.google.com" },
+    ],
+  },
   {
     rank: 5,
     name: "Nordic Logistics S.r.l.",
@@ -24,6 +73,9 @@ const INITIAL_RANKED_COMPANIES: RankedCompanyItem[] = [
     fullAddress: "Interporto Quadrante Europa, 37135 Verona (VR)",
     phone: "+39 045 862 1000",
     website: "https://www.nordiclogistics.it",
+    pIva: "IT03891020231",
+    bersaglioScore: 8.5,
+    triggerScore: 8.4,
     sources: [
       { title: "Registro Imprese — C.C.I.A.A. Verona", url: "https://www.registroimprese.it" },
       { title: "ReportAziende — Dati camerali 2024", url: "https://www.reportaziende.it" },
@@ -41,6 +93,9 @@ const INITIAL_RANKED_COMPANIES: RankedCompanyItem[] = [
     fullAddress: "Via dell'Industria 14, 40012 Calderara di Reno (BO)",
     phone: "+39 051 728 900",
     website: "https://www.vanguardpack.it",
+    pIva: "IT04182900378",
+    bersaglioScore: 9.2,
+    triggerScore: 9.0,
     sources: [
       { title: "Registro Imprese — C.C.I.A.A. Bologna", url: "https://www.registroimprese.it" },
       { title: "FatturatoItalia — Scheda aziendale", url: "https://www.fatturatoitalia.it" },
@@ -58,6 +113,9 @@ const INITIAL_RANKED_COMPANIES: RankedCompanyItem[] = [
     fullAddress: "Viale della Scienza 22, 36100 Vicenza (VI)",
     phone: "+39 0444 964 120",
     website: "https://www.officinerossi.it",
+    pIva: "IT02891030245",
+    bersaglioScore: 9.5,
+    triggerScore: 9.1,
     sources: [
       { title: "Registro Imprese — C.C.I.A.A. Vicenza", url: "https://www.registroimprese.it" },
       { title: "ReportAziende — Bilancio depositato", url: "https://www.reportaziende.it" },
@@ -75,6 +133,9 @@ const INITIAL_RANKED_COMPANIES: RankedCompanyItem[] = [
     fullAddress: "Via Crotte 28, 25127 Brescia (BS)",
     phone: "+39 030 373 5500",
     website: "https://www.kronoautomazioni.it",
+    pIva: "IT03182900174",
+    bersaglioScore: 8.6,
+    triggerScore: 9.8,
     sources: [
       { title: "Registro Imprese — C.C.I.A.A. Brescia", url: "https://www.registroimprese.it" },
       { title: "FatturatoItalia — Dati 2024", url: "https://www.fatturatoitalia.it" },
@@ -92,6 +153,9 @@ const INITIAL_RANKED_COMPANIES: RankedCompanyItem[] = [
     fullAddress: "Corso Svizzera 185, 10149 Torino (TO)",
     phone: "+39 011 749 6100",
     website: "https://www.aeternaprecision.it",
+    pIva: "IT07829100012",
+    bersaglioScore: 9.8,
+    triggerScore: 8.5,
     sources: [
       { title: "Registro Imprese — C.C.I.A.A. Torino", url: "https://www.registroimprese.it" },
       { title: "ReportAziende — Bilancio depositato", url: "https://www.reportaziende.it" },
@@ -99,6 +163,448 @@ const INITIAL_RANKED_COMPANIES: RankedCompanyItem[] = [
     ],
   },
 ];
+
+const GLOBE_CARD_COORDS: ReadonlyArray<{ lat: string; lon: string }> = [
+  { lat: "74.6deg", lon: "0.0deg" },
+  { lat: "63.2deg", lon: "137.5deg" },
+  { lat: "55.2deg", lon: "275.0deg" },
+  { lat: "48.6deg", lon: "52.5deg" },
+  { lat: "42.7deg", lon: "190.0deg" },
+  { lat: "37.4deg", lon: "327.5deg" },
+  { lat: "32.4deg", lon: "105.0deg" },
+  { lat: "27.7deg", lon: "242.6deg" },
+  { lat: "23.1deg", lon: "20.1deg" },
+  { lat: "18.7deg", lon: "157.6deg" },
+  { lat: "14.5deg", lon: "295.1deg" },
+  { lat: "10.3deg", lon: "72.6deg" },
+  { lat: "6.2deg", lon: "210.1deg" },
+  { lat: "2.0deg", lon: "347.6deg" },
+  { lat: "-2.0deg", lon: "125.1deg" },
+  { lat: "-6.2deg", lon: "262.6deg" },
+  { lat: "-10.3deg", lon: "40.1deg" },
+  { lat: "-14.5deg", lon: "177.6deg" },
+  { lat: "-18.7deg", lon: "315.1deg" },
+  { lat: "-23.1deg", lon: "92.7deg" },
+  { lat: "-27.7deg", lon: "230.2deg" },
+  { lat: "-32.4deg", lon: "7.7deg" },
+  { lat: "-37.4deg", lon: "145.2deg" },
+  { lat: "-42.7deg", lon: "282.7deg" },
+  { lat: "-48.6deg", lon: "60.2deg" },
+  { lat: "-55.2deg", lon: "197.7deg" },
+  { lat: "-63.2deg", lon: "335.2deg" },
+  { lat: "-74.6deg", lon: "112.7deg" },
+];
+
+const B2B_EFFECT_TILES: ReadonlyArray<{ title: string; subtitle: string }> = [
+  { title: "Verified B2B Target", subtitle: "Financial Audit" },
+  { title: "CXI Priority Match", subtitle: "Tailored Outreach" },
+  { title: "Google Maps", subtitle: "Operational Check" },
+  { title: "Market Intelligence", subtitle: "AI Grounded" },
+  { title: "Decision Makers", subtitle: "Buyer Personas" },
+  { title: "Trigger Signals", subtitle: "Live Scoring" },
+  { title: "Bilanci & ATECO", subtitle: "Dual Portal Check" },
+  { title: "Lead Qualification", subtitle: "High Precision" },
+  { title: "Zero Hallucination", subtitle: "Source Verified" },
+  { title: "Outreach Ready", subtitle: "Custom Email Hook" },
+];
+
+type GlobeTileData =
+  | {
+      kind: "logo";
+      companyName: string;
+      cluster: string;
+      logoCandidates: string[];
+    }
+  | {
+      kind: "text";
+      title: string;
+      subtitle: string;
+    };
+
+function extractCompanyDomain(website?: string): string | null {
+  if (!website) return null;
+  try {
+    const normalized = website.startsWith("http") ? website : `https://${website}`;
+    const hostname = new URL(normalized).hostname.replace(/^www\./i, "").toLowerCase();
+    if (
+      !hostname ||
+      hostname === "azienda-target.it" ||
+      hostname === "azienda.it" ||
+      hostname.includes("registroimprese.it") ||
+      hostname.includes("reportaziende.it") ||
+      hostname.includes("fatturatoitalia.it") ||
+      hostname.includes("ufficiocamerale.it") ||
+      hostname.includes("maps.google.") ||
+      hostname.includes("google.com") ||
+      hostname.includes("vertexaisearch.cloud.google.com") ||
+      hostname.includes("wikipedia.org") ||
+      hostname.includes("paginegialle.it") ||
+      hostname.includes("infocamere.it") ||
+      hostname.includes("linkedin.com")
+    ) {
+      return null;
+    }
+    return hostname;
+  } catch {
+    return null;
+  }
+}
+
+function buildGlobeTiles(rankedCompanies: RankedCompanyItem[]): GlobeTileData[] {
+  const totalSlots = GLOBE_CARD_COORDS.length;
+  const maxLogoRepsPerCompany = 3;
+
+  const logoEntries: GlobeTileData[] = [];
+  const textEntries: GlobeTileData[] = [];
+
+  for (const company of rankedCompanies) {
+    const candidateUrls = [
+      company.website,
+      ...(company.sources?.map((s) => s.url) ?? []),
+    ];
+    let domain: string | null = null;
+    for (const url of candidateUrls) {
+      domain = extractCompanyDomain(url);
+      if (domain) break;
+    }
+
+    const logoCandidates: string[] = [];
+    const directLogo = company.logoUrl?.trim();
+    if (directLogo && /^https?:\/\//i.test(directLogo)) {
+      logoCandidates.push(directLogo);
+    }
+    if (domain) {
+      const googleFavicon = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=128`;
+      const ddgIcon = `https://icons.duckduckgo.com/ip3/${encodeURIComponent(domain)}.ico`;
+      if (!logoCandidates.includes(googleFavicon)) logoCandidates.push(googleFavicon);
+      if (!logoCandidates.includes(ddgIcon)) logoCandidates.push(ddgIcon);
+    }
+
+    if (logoCandidates.length > 0) {
+      logoEntries.push({
+        kind: "logo",
+        companyName: company.name,
+        cluster: company.cluster,
+        logoCandidates,
+      });
+    }
+
+    textEntries.push({
+      kind: "text",
+      title: company.name,
+      subtitle: company.cluster || company.headquartersCity || "B2B Target",
+    });
+  }
+
+  // Costruisci un pool ordinato rispettando il limite massimo di 3 ripetizioni per logo aziendale
+  const logoPool: GlobeTileData[] = [];
+  if (logoEntries.length > 0) {
+    for (let rep = 0; rep < maxLogoRepsPerCompany; rep++) {
+      for (const entry of logoEntries) {
+        logoPool.push(entry);
+      }
+    }
+  }
+
+  const companyTextPool: GlobeTileData[] = [];
+  if (textEntries.length > 0) {
+    const targetCompanyTextCount = Math.min(totalSlots - Math.min(logoPool.length, 14), textEntries.length * 2);
+    for (let i = 0; i < targetCompanyTextCount; i++) {
+      companyTextPool.push(textEntries[i % textEntries.length]!);
+    }
+  }
+
+  const combined: GlobeTileData[] = [];
+  const maxLogosUsed = Math.min(logoPool.length, 14);
+  let li = 0;
+  let ti = 0;
+  let ei = 0;
+
+  while (combined.length < totalSlots) {
+    if (li < maxLogosUsed) {
+      combined.push(logoPool[li++]!);
+    }
+    if (combined.length < totalSlots && ti < companyTextPool.length) {
+      combined.push(companyTextPool[ti++]!);
+    }
+    if (combined.length < totalSlots && li >= maxLogosUsed && ti >= companyTextPool.length) {
+      const effect = B2B_EFFECT_TILES[ei % B2B_EFFECT_TILES.length]!;
+      combined.push({
+        kind: "text",
+        title: effect.title,
+        subtitle: effect.subtitle,
+      });
+      ei++;
+    }
+  }
+
+  return combined.slice(0, totalSlots);
+}
+
+function QualifiedGlobeTile({ tile }: { tile: GlobeTileData }) {
+  const candidatesKey =
+    tile.kind === "logo" ? tile.logoCandidates.join("|") : "";
+  const [fallbackState, setFallbackState] = useState<{
+    key: string;
+    index: number;
+  }>({ key: candidatesKey, index: 0 });
+
+  const candidateIndex =
+    fallbackState.key === candidatesKey ? fallbackState.index : 0;
+
+  const advanceCandidate = () => {
+    setFallbackState((prev) => ({
+      key: candidatesKey,
+      index: (prev.key === candidatesKey ? prev.index : 0) + 1,
+    }));
+  };
+
+  const activeLogoUrl =
+    tile.kind === "logo" ? tile.logoCandidates[candidateIndex] : undefined;
+
+  if (tile.kind === "logo" && activeLogoUrl) {
+    const isGoogleFavicon = activeLogoUrl.includes("google.com/s2/favicons");
+    return (
+      <div className="cl-face m-surface">
+        <div className="flex h-full w-full flex-col items-center justify-between p-2">
+          <div className="flex min-h-0 w-full flex-1 items-center justify-center">
+            <img
+              src={activeLogoUrl}
+              alt={tile.companyName}
+              loading="eager"
+              onError={advanceCandidate}
+              onLoad={(e) => {
+                if (isGoogleFavicon && e.currentTarget.naturalWidth <= 16) {
+                  advanceCandidate();
+                }
+              }}
+              className="max-h-[56%] max-w-[56%] select-none object-contain"
+            />
+          </div>
+          <span className="m-text-3 w-full truncate text-center text-[10px]">
+            {tile.companyName}
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  const title = tile.kind === "logo" ? tile.companyName : tile.title;
+  const subtitle = tile.kind === "logo" ? tile.cluster : tile.subtitle;
+
+  return (
+    <div className="cl-face m-surface">
+      <span className="m-text-3 line-clamp-2">{title}</span>
+      <span className="m-text-3 cl-trade truncate">{subtitle}</span>
+    </div>
+  );
+}
+
+function parseEmailHook(
+  rawMail: string,
+  solutionName: string,
+  companyName: string
+): { subject: string; body: string } {
+  const trimmed = (rawMail || "").trim();
+  const subjectMatch = trimmed.match(/^Oggetto:\s*(.+)$/im);
+  if (subjectMatch) {
+    const subject = subjectMatch[1]!.trim();
+    const body = trimmed.replace(/^Oggetto:\s*.+(?:\r?\n)+/i, "").trim();
+    return {
+      subject: subject || `${solutionName} — Opportunità per ${companyName}`,
+      body: body || trimmed,
+    };
+  }
+  return {
+    subject: `${solutionName} — Opportunità per ${companyName}`,
+    body: trimmed,
+  };
+}
+
+function mapCompanyResultToRankedItem(
+  c: CompanyResult,
+  rank: number
+): RankedCompanyItem {
+  const institutionalUrl =
+    c.sources.find((s) => s.sourceType === "INSTITUTIONAL")?.url ||
+    c.sources[0]?.url ||
+    "";
+  const website = c.mapsWebsiteUri || institutionalUrl;
+  const fullAddress =
+    c.indirizzoVerificatoMaps && c.indirizzoVerificatoMaps !== "N.D."
+      ? c.indirizzoVerificatoMaps
+      : c.sedeRegione
+        ? `${c.sedeCitta} (${c.sedeRegione})`
+        : c.sedeCitta;
+
+  const p1 = c.buyer_personas?.[0];
+  const p2 = c.buyer_personas?.[1];
+
+  const dossier: CompanyDossier = {
+    keyInfo: {
+      summary: c.companyDescription || c.cosaSapere,
+      coreBusiness: c.cosaSapere || c.altriDatiChiave,
+      markets: `${c.altriDatiChiave ? `${c.altriDatiChiave} ` : ""}Presidio operativo: ${c.sedeCitta}${c.sedeRegione ? ` (${c.sedeRegione})` : ""} — ${c.bacinoClientiODimensione || c.sub_cluster_specifico}.`,
+    },
+    cxiPrimary: {
+      name: c.cxi_primaria.nome_soluzione,
+      year:
+        c.cxi_primaria.trigger_data ||
+        (c.fatturatoAnno ? String(c.fatturatoAnno) : undefined),
+      tailoredService: c.cxi_primaria.servizio_personalizzato_1_riga,
+      trigger: c.cxi_primaria.trigger_fatto,
+      emailHook: parseEmailHook(
+        c.cxi_primaria.gancio_mail,
+        c.cxi_primaria.nome_soluzione,
+        c.ragioneSociale
+      ),
+    },
+    cxiSecondary: {
+      name: c.cxi_secondaria.nome_soluzione,
+      tailoredService: c.cxi_secondaria.servizio_personalizzato_1_riga,
+      trigger: c.cxi_secondaria.trigger_fatto,
+    },
+    buyerPersonas: [
+      {
+        figureNumber: 1,
+        role: p1?.ruolo_e_nome || "Direzione Operativa",
+        decisionLevel: p1?.livello_decisionale || "Decisore economico",
+        interests: p1?.cosa_gli_interessa || "Efficienza operativa e customer experience.",
+        firstMessageAngle:
+          p1?.primo_messaggio_utile || "Proporre un confronto sui risultati operativi CXI.",
+      },
+      {
+        figureNumber: 2,
+        role: p2?.ruolo_e_nome || "Direzione Digitale / IT",
+        decisionLevel: p2?.livello_decisionale || "Sponsor strategico",
+        interests: p2?.cosa_gli_interessa || "Digitalizzazione e integrazione dei processi.",
+        firstMessageAngle:
+          p2?.primo_messaggio_utile || "Approcciare con focus su innovazione e scalabilità.",
+      },
+    ],
+    scoringBreakdown: {
+      fitTargetScore: c.scoreTarget,
+      fitTargetWeighted: `+${(c.score_breakdown?.contributo_target ?? c.scoreTarget * 0.5).toFixed(2)}`,
+      potenzaTriggerScore: c.scoreTrigger,
+      potenzaTriggerWeighted: `+${(c.score_breakdown?.contributo_trigger ?? c.scoreTrigger * 0.5).toFixed(2)}`,
+      malusPersona: c.malusApplied ?? 0,
+      malusPersonaMax: "max -0.50",
+      totalScore: c.scoreFinal,
+      formulaExplanation: c.explainability,
+    },
+  };
+
+  return {
+    rank,
+    name: c.ragioneSociale,
+    revenue:
+      typeof c.fatturatoValore === "number"
+        ? c.fatturatoValore
+        : c.bacinoClientiODimensione || "N/A",
+    employees: typeof c.dipendenti === "number" ? c.dipendenti : "N/A",
+    cluster: c.cluster_macro,
+    subcategory: c.sub_cluster_specifico,
+    headquartersCity: c.sedeCitta || "Italia",
+    fullAddress,
+    phone: c.mapsPhone || "N.D.",
+    website,
+    logoUrl: c.logoUrl ?? null,
+    pIva: c.partitaIva || "N.D.",
+    bersaglioScore: c.scoreTarget,
+    triggerScore: c.scoreTrigger,
+    liveScore: c.scoreFinal,
+    sources: c.sources.map((s) => ({ title: s.title, url: s.url })),
+    dossier,
+  };
+}
+
+function mapCompanyResultToCandidate(
+  c: CompanyResult,
+  macroCategory: string
+): CompanyCandidate {
+  return {
+    id: c.id,
+    name: c.ragioneSociale,
+    cluster: c.sub_cluster_specifico || c.cluster_macro,
+    macroCategory,
+    headquartersCity: c.sedeCitta || "Italia",
+    revenue:
+      typeof c.fatturatoValore === "number"
+        ? c.fatturatoValore
+        : c.bacinoClientiODimensione || "N/A",
+    employees: typeof c.dipendenti === "number" ? c.dipendenti : "N/A",
+    bersaglioScore: c.scoreTarget,
+    triggerScore: c.scoreTrigger,
+    malus: c.malusApplied ?? 0,
+  };
+}
+
+function mapDiscardedToNonClassificate(
+  discarded: DiscardedCompanyTrace[] | undefined
+): NonClassificataItem[] {
+  if (!Array.isArray(discarded) || discarded.length === 0) return [];
+  const seen = new Set<string>();
+  const out: NonClassificataItem[] = [];
+
+  for (let i = 0; i < discarded.length; i++) {
+    const item = discarded[i];
+    if (!item || !item.ragioneSociale) continue;
+    const stageLower = (item.stage || "").toLowerCase();
+    // Esclude il cut-off di Step 6 (le aziende extra con voto vanno in Fuori Ranking)
+    if (stageLower.includes("step 6") || stageLower.includes("cut-off")) {
+      continue;
+    }
+    const key = item.ragioneSociale.trim().toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    out.push({
+      id: `nc-real-${i}-${key.replace(/[^a-z0-9]/g, "-")}`,
+      name: item.ragioneSociale,
+      city: "—",
+      reason: item.reason,
+    });
+  }
+  return out;
+}
+
+function buildCompositePromptForApi(
+  query: string,
+  params?: MorphOrbParams
+): { compositePrompt: string; mandatoryParams: MandatorySearchInput } {
+  const categoriaSettore = params?.categoria?.trim() ?? "";
+  const areaGeografica = params?.area?.trim() ?? "";
+  const dimensioneAziendale = params?.dimensione?.trim() ?? "";
+  const noteStrategiche = query.trim();
+
+  const structuredParts: string[] = [];
+  if (categoriaSettore) {
+    structuredParts.push(`Settore/Categoria: "${categoriaSettore}"`);
+  }
+  if (areaGeografica) {
+    structuredParts.push(`Area Geografica: "${areaGeografica}"`);
+  }
+  if (dimensioneAziendale) {
+    structuredParts.push(`Dimensione Aziendale: "${dimensioneAziendale}"`);
+  }
+
+  const compositePrompt =
+    structuredParts.length === 0
+      ? noteStrategiche
+      : noteStrategiche
+        ? `Parametri specificati nei campi dedicati — ${structuredParts.join(", ")}. Richiesta utente: ${noteStrategiche}`
+        : `Parametri specificati nei campi dedicati — ${structuredParts.join(", ")}.`;
+
+  return {
+    compositePrompt,
+    mandatoryParams: {
+      categoriaSettore,
+      areaGeografica,
+      dimensioneAziendale,
+      noteStrategiche,
+    },
+  };
+}
 
 export default function BrainUIPage() {
   const [isIntroFinished, setIsIntroFinished] = useState(false);
@@ -109,35 +615,412 @@ export default function BrainUIPage() {
   // Parametro variabile: numero di aziende richieste in classifica dall'utente (5 aziende come richiesto dal workflow)
   const [targetRankedCount, setTargetRankedCount] = useState<number>(5);
   const [companies, setCompanies] = useState<RankedCompanyItem[]>(INITIAL_RANKED_COMPANIES);
+  const [raceCompanies, setRaceCompanies] = useState<CompanyCandidate[]>([]);
+  const [nonClassificateCompanies, setNonClassificateCompanies] = useState<NonClassificataItem[] | undefined>(undefined);
+  const [guardrailMessage, setGuardrailMessage] = useState<string | null>(null);
+  const [searchedMacroCategory, setSearchedMacroCategory] = useState<string>("SaaS & Digital Tech");
   const [hasSearchResults, setHasSearchResults] = useState(false);
   const [companyHunterKey, setCompanyHunterKey] = useState(0);
   const morphOrbRef = React.useRef<MorphOrbRef>(null);
+  const scoutAbortRef = React.useRef<AbortController | null>(null);
   const [agentPhase, setAgentPhase] = useState<string>("idle");
   const [isAgentScreenOpen, setIsAgentScreenOpen] = useState(false);
+  const [sliderBersaglioPct, setSliderBersaglioPct] = useState<number>(50);
   const scrollRafRef = React.useRef<number | null>(null);
 
-  // Ordine dal peggiore al migliore in classifica (es. #5, #4 -> poi #3, #2, #1)
+  const handleSelectCompany = useCallback((companyName: string) => {
+    const domId = `company-card-${companyName.toLowerCase().replace(/[^a-z0-9]/g, "-")}`;
+    const el = document.getElementById(domId) || document.getElementById("reviews");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, []);
+
+  // Calcolo dinamico dello score e riordinamento della classifica in tempo reale con lo slider Bersaglio / Trigger
+  const dynamicRankedCompanies = useMemo(() => {
+    const bPct = sliderBersaglioPct;
+    const tPct = 100 - bPct;
+    const scored = companies.map((c, idx) => {
+      const bScore = c.bersaglioScore ?? (9.6 - (idx % 5) * 0.2);
+      const tScore = c.triggerScore ?? (8.5 + (idx % 5) * 0.3);
+      const malus = c.dossier?.scoringBreakdown?.malusPersona ?? 0;
+      const rawLive = (bScore * bPct + tScore * tPct) / 100 - malus;
+      const liveScore = Math.max(1.0, Math.min(10.0, Math.round(rawLive * 10) / 10));
+      return {
+        ...c,
+        bersaglioScore: bScore,
+        triggerScore: tScore,
+        liveScore,
+      };
+    });
+
+    // Ordina decrescente per liveScore, con fallback per mantenere coerenza
+    const sorted = [...scored].sort(
+      (a, b) => b.liveScore - a.liveScore || a.name.localeCompare(b.name)
+    );
+
+    // Riassegna la posizione in classifica (rank 1..N)
+    return sorted.map((company, index) => ({
+      ...company,
+      rank: index + 1,
+    }));
+  }, [companies, sliderBersaglioPct]);
+
+  // Ordine di rendering per il carosello evenkeel (#reviews):
+  // Dal punteggio più basso al più alto per far sì che la #1 stia in cima allo stack
   const orderedCompanies = useMemo(
-    () => [...companies].sort((a, b) => b.rank - a.rank),
-    [companies]
+    () => [...dynamicRankedCompanies].sort((a, b) => b.rank - a.rank),
+    [dynamicRankedCompanies]
   );
+
+  // Mix per il globo 3D #clients (loghi PNG + nomi/settori + frasi B2B su sfondo grigio m-surface)
+  const globeTiles = useMemo(
+    () => buildGlobeTiles(dynamicRankedCompanies),
+    [dynamicRankedCompanies]
+  );
+
+  // Ricalcola le misure e le variabili CSS (--reviews-at, --reviews-top) ogni volta che
+  // la graduatoria delle tessere viene modificata o riordinata, garantendo che lo scorrimento
+  // e l'effetto stacking di impilamento funzionino perfettamente per tutte le tessere.
+  useEffect(() => {
+    const updateReviewsMeasurements = () => {
+      const sheets = Array.from(
+        document.querySelectorAll<HTMLElement>("#reviews .rv-stack > li")
+      );
+      if (sheets.length <= 1) return;
+      let at = 0;
+      sheets.slice(0, -1).forEach((sheet, i) => {
+        const nextSheet = sheets[i + 1];
+        if (!nextSheet) return;
+        const mb = parseFloat(getComputedStyle(sheet).marginBottom) || 0;
+        at += sheet.offsetHeight + mb;
+        const nextTop = parseFloat(getComputedStyle(nextSheet).top) || 0;
+        sheet.style.setProperty("--reviews-at", `${at}px`);
+        sheet.style.setProperty("--reviews-top", `${nextTop}px`);
+      });
+    };
+
+    updateReviewsMeasurements();
+    const t = setTimeout(updateReviewsMeasurements, 150);
+    return () => clearTimeout(t);
+  }, [orderedCompanies]);
 
   const handleAgentSubmit = useCallback(
     async (query: string, params?: MorphOrbParams) => {
-      // Simulazione ricerca agentica locale (senza chiamate API esterne per ora)
-      await new Promise((resolve) => setTimeout(resolve, 1400));
-      const result = simulateCompanyHunterSearch(query, params);
-      setCompanies(result.companies);
-      setTargetRankedCount(5);
-      setHasSearchResults(true);
+      scoutAbortRef.current?.abort();
+      scoutAbortRef.current = null;
 
-      // Notifica aggiornamento misure scroll-driven (evenkeel)
-      if (typeof window !== "undefined") {
-        setTimeout(() => {
-          window.dispatchEvent(new Event("resize"));
-        }, 300);
+      // Modalità Demo: conserva la simulazione istantanea di test
+      if (params?.isDemo) {
+        setGuardrailMessage(null);
+        setNonClassificateCompanies(undefined);
+        setHasSearchResults(false);
+        setSliderBersaglioPct(50);
+
+        const result = simulateCompanyHunterSearch(query, params);
+        const macroCat = result.criteria.categoria || "SaaS & Digital Tech";
+        setSearchedMacroCategory(macroCat);
+        setRaceCompanies([]);
+
+        const requestedMatch = (query + " " + (params?.dimensione || "")).match(/\b(10|\d+)\s*(?:aziend|nomi|societ)/i);
+        const reqCount = requestedMatch ? Math.min(15, Math.max(3, parseInt(requestedMatch[1]!, 10))) : 5;
+        setTargetRankedCount(reqCount);
+
+        const scorePresets = [
+          { bersaglio: 9.8, trigger: 8.5 },
+          { bersaglio: 8.6, trigger: 9.8 },
+          { bersaglio: 9.5, trigger: 9.1 },
+          { bersaglio: 9.2, trigger: 9.4 },
+          { bersaglio: 8.9, trigger: 8.8 },
+          { bersaglio: 9.7, trigger: 7.9 },
+          { bersaglio: 7.8, trigger: 9.7 },
+          { bersaglio: 8.5, trigger: 8.4 },
+          { bersaglio: 8.3, trigger: 8.2 },
+          { bersaglio: 8.0, trigger: 7.9 },
+        ];
+
+        const extraSectorCompanies = [
+          { name: "Aura Neural Labs S.r.l.", cluster: "Computer Vision", city: "Verona (VR)", rev: 11400000, emp: 78, pIva: "IT04728190234" },
+          { name: "Vortex SecOps S.p.A.", cluster: "Cloud Security", city: "Genova (GE)", rev: 15800000, emp: 105, pIva: "IT02719280105" },
+          { name: "Prisma Systems S.r.l.", cluster: "ERP Platforms", city: "Brescia (BS)", rev: 9200000, emp: 58, pIva: "IT03918270176" },
+          { name: "Zenith Cloud S.p.A.", cluster: "Fintech Services", city: "Firenze (FI)", rev: 13600000, emp: 86, pIva: "IT06819200483" },
+          { name: "Echo Logic Media S.r.l.", cluster: "AdTech Analytics", city: "Padova (PD)", rev: 7800000, emp: 50, pIva: "IT05192830289" },
+        ];
+
+        const fullCandidateList = [...result.companies];
+        extraSectorCompanies.forEach((extra) => {
+          if (!fullCandidateList.some((c) => c.name === extra.name)) {
+            fullCandidateList.push({
+              rank: fullCandidateList.length + 1,
+              name: extra.name,
+              revenue: extra.rev,
+              employees: extra.emp,
+              cluster: extra.cluster,
+              subcategory: `${extra.cluster} (${result.criteria.area})`,
+              headquartersCity: extra.city,
+              fullAddress: `Via dell'Innovazione 1, ${extra.city}`,
+              phone: "+39 02 8900 1234",
+              website: "https://www.azienda-target.it",
+              pIva: extra.pIva,
+              sources: [{ title: "Registro Imprese", url: "https://www.registroimprese.it" }],
+            });
+          }
+        });
+
+        const candidatesWithScores: RankedCompanyItem[] = fullCandidateList.map((c, idx) => ({
+          ...c,
+          bersaglioScore: scorePresets[idx]?.bersaglio ?? (9.5 - (idx % 6) * 0.2),
+          triggerScore: scorePresets[idx]?.trigger ?? (8.5 + (idx % 6) * 0.3),
+        }));
+
+        const candidates: CompanyCandidate[] = candidatesWithScores.map((c, idx) => ({
+          id: `cand-${idx}-${c.name.toLowerCase().replace(/[^a-z0-9]/g, "-")}`,
+          name: c.name,
+          cluster: c.cluster,
+          macroCategory: macroCat,
+          headquartersCity: c.headquartersCity,
+          revenue: c.revenue,
+          employees: c.employees,
+          bersaglioScore: c.bersaglioScore!,
+          triggerScore: c.triggerScore!,
+        }));
+
+        setRaceCompanies([]);
+        await new Promise((resolve) => setTimeout(resolve, 600));
+
+        for (let i = 0; i < candidates.length; i++) {
+          setRaceCompanies((prev) => [...prev, candidates[i]!]);
+          if (i < candidates.length - 1) {
+            await new Promise((resolve) => setTimeout(resolve, 640));
+          }
+        }
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
+        setCompanies(candidatesWithScores);
+        setHasSearchResults(true);
+
+        if (typeof window !== "undefined") {
+          setTimeout(() => {
+            window.dispatchEvent(new Event("resize"));
+          }, 300);
+        }
+        return result.summary;
       }
-      return result.summary;
+
+      // Modalità Reale: chiamata streaming SSE al backend Gemini (/api/scout)
+      const abortController = new AbortController();
+      scoutAbortRef.current = abortController;
+
+      const { compositePrompt, mandatoryParams } = buildCompositePromptForApi(query, params);
+      const initialCategory = params?.categoria?.trim() || "Scouting B2B";
+      let activeCategory = initialCategory;
+
+      const requestedMatch = (query + " " + (params?.dimensione || "")).match(
+        /\b(10|\d+)\s*(?:aziend|nomi|societ)/i
+      );
+      const initialReqCount = requestedMatch
+        ? Math.min(20, Math.max(1, parseInt(requestedMatch[1]!, 10)))
+        : 5;
+
+      setGuardrailMessage(null);
+      setHasSearchResults(false);
+      setRaceCompanies([]);
+      setNonClassificateCompanies([]);
+      setSliderBersaglioPct(50);
+      setSearchedMacroCategory(initialCategory);
+      setTargetRankedCount(initialReqCount);
+
+      const streamedCompaniesByKey = new Map<string, CompanyResult>();
+      let finalSummary = "";
+      let gotResult = false;
+      let hadError = false;
+
+      const handleStreamEvent = (streamEvent: ScoutStreamEvent) => {
+        if (abortController.signal.aborted) return;
+
+        if (streamEvent.type === "intent") {
+          if (streamEvent.constraints.settore) {
+            activeCategory = streamEvent.constraints.settore;
+            setSearchedMacroCategory(streamEvent.constraints.settore);
+          }
+          if (streamEvent.constraints.requestedCount) {
+            setTargetRankedCount(streamEvent.constraints.requestedCount);
+          }
+        } else if (streamEvent.type === "company") {
+          const c = streamEvent.company;
+          const dedupKey = c.id || c.ragioneSociale.trim().toLowerCase();
+          streamedCompaniesByKey.set(dedupKey, c);
+          const candidate = mapCompanyResultToCandidate(c, activeCategory);
+          setRaceCompanies((prev) => {
+            const filtered = prev.filter(
+              (item) => item.id !== candidate.id && item.name !== candidate.name
+            );
+            return [...filtered, candidate];
+          });
+        } else if (streamEvent.type === "trace") {
+          setNonClassificateCompanies(
+            mapDiscardedToNonClassificate(streamEvent.debug_trace.discarded_companies)
+          );
+        } else if (streamEvent.type === "result") {
+          gotResult = true;
+          const payload = streamEvent.payload;
+          finalSummary = payload.text_response;
+
+          const allScored = payload.all_scored_companies ?? payload.ranked_companies;
+          if (payload.response_type === "text_only" || allScored.length === 0) {
+            setGuardrailMessage(
+              payload.text_response ||
+                "Specifica Categoria/Settore, Area Geografica e Dimensione Aziendale per avviare lo scouting B2B."
+            );
+            setRaceCompanies([]);
+            setNonClassificateCompanies([]);
+            setHasSearchResults(false);
+          } else {
+            const rankedItems = allScored.map((c, idx) =>
+              mapCompanyResultToRankedItem(c, idx + 1)
+            );
+            const candidates = allScored.map((c) =>
+              mapCompanyResultToCandidate(c, activeCategory)
+            );
+
+            setRaceCompanies(candidates);
+            setCompanies(rankedItems);
+            setNonClassificateCompanies(
+              mapDiscardedToNonClassificate(payload.debug_trace.discarded_companies)
+            );
+            setGuardrailMessage(null);
+            setHasSearchResults(true);
+
+            if (typeof window !== "undefined") {
+              setTimeout(() => {
+                window.dispatchEvent(new Event("resize"));
+              }, 300);
+            }
+          }
+        } else if (streamEvent.type === "error") {
+          hadError = true;
+          finalSummary = streamEvent.message;
+          setGuardrailMessage(streamEvent.message);
+          setHasSearchResults(false);
+        }
+      };
+
+      try {
+        const response = await fetch("/api/scout", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "text/event-stream",
+          },
+          body: JSON.stringify({
+            prompt: compositePrompt,
+            mandatoryParams,
+          }),
+          signal: abortController.signal,
+        });
+
+        if (response.status === 401) {
+          if (typeof window !== "undefined") {
+            window.location.href = "/login";
+          }
+          return "Sessione scaduta. Reindirizzamento al login.";
+        }
+
+        if (!response.ok || !response.body) {
+          const errPayload = (await response.json().catch(() => null)) as {
+            error?: string;
+          } | null;
+          const errMsg =
+            errPayload?.error ||
+            "Impossibile avviare la ricerca con le API di Gemini.";
+          setGuardrailMessage(errMsg);
+          setHasSearchResults(false);
+          return errMsg;
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          if (abortController.signal.aborted) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const chunks = buffer.split(/\r?\n\r?\n/);
+          buffer = chunks.pop() ?? "";
+
+          for (const chunk of chunks) {
+            const lines = chunk.split(/\r?\n/);
+            for (const line of lines) {
+              if (!line.startsWith("data: ")) continue;
+              const jsonRaw = line.slice(6).trim();
+              if (!jsonRaw) continue;
+              try {
+                const streamEvent = JSON.parse(jsonRaw) as ScoutStreamEvent;
+                handleStreamEvent(streamEvent);
+              } catch {
+                // ignora chunk JSON malformati parziali
+              }
+            }
+          }
+        }
+
+        if (buffer.trim() && !abortController.signal.aborted) {
+          for (const line of buffer.split(/\r?\n/)) {
+            if (!line.startsWith("data: ")) continue;
+            const jsonRaw = line.slice(6).trim();
+            if (!jsonRaw) continue;
+            try {
+              const streamEvent = JSON.parse(jsonRaw) as ScoutStreamEvent;
+              handleStreamEvent(streamEvent);
+            } catch {
+              // ignore trailing incomplete event
+            }
+          }
+        }
+
+        if (!gotResult && !hadError && !abortController.signal.aborted) {
+          const fallbackCompanies = Array.from(streamedCompaniesByKey.values());
+          if (fallbackCompanies.length > 0) {
+            const rankedItems = fallbackCompanies.map((c, idx) =>
+              mapCompanyResultToRankedItem(c, idx + 1)
+            );
+            setCompanies(rankedItems);
+            setHasSearchResults(true);
+            if (typeof window !== "undefined") {
+              setTimeout(() => {
+                window.dispatchEvent(new Event("resize"));
+              }, 300);
+            }
+          } else {
+            const errMsg =
+              "Connessione allo stream di scouting interrotta prima del completamento.";
+            setGuardrailMessage(errMsg);
+            setHasSearchResults(false);
+            return errMsg;
+          }
+        }
+
+        return finalSummary || "Scouting B2B completato.";
+      } catch (err) {
+        if (
+          abortController.signal.aborted ||
+          (err instanceof DOMException && err.name === "AbortError")
+        ) {
+          return "";
+        }
+        const errMsg =
+          "Errore di rete durante la comunicazione con il backend /api/scout.";
+        setGuardrailMessage(errMsg);
+        setHasSearchResults(false);
+        return errMsg;
+      } finally {
+        if (scoutAbortRef.current === abortController) {
+          scoutAbortRef.current = null;
+        }
+      }
     },
     []
   );
@@ -962,9 +1845,15 @@ export default function BrainUIPage() {
                         transition={{ duration: 0.25, ease: "easeOut" }}
                         onClick={(e) => {
                           e.stopPropagation();
+                          scoutAbortRef.current?.abort();
+                          scoutAbortRef.current = null;
                           setAgentPhase("idle");
                           morphOrbRef.current?.reset();
                           setHasSearchResults(false);
+                          setRaceCompanies([]);
+                          setNonClassificateCompanies(undefined);
+                          setGuardrailMessage(null);
+                          setSliderBersaglioPct(50);
                         }}
                         className="group relative inline-flex flex-col items-center justify-center pt-1 pb-1 px-3 bg-transparent border-0 outline-none cursor-pointer pointer-events-auto"
                       >
@@ -983,11 +1872,93 @@ export default function BrainUIPage() {
                 </HeroShutterText>
               </div>
 
+              {/* Classifica Bar Race Dinamica Dark Mode: compare appena il globo bianco inizia a roteare */}
+              <AnimatePresence>
+                {(agentPhase === "assemble" ||
+                  agentPhase === "think" ||
+                  agentPhase === "resolve" ||
+                  agentPhase === "answered") && (
+                  <motion.div
+                    key="agent-ranking-race-overlay"
+                    initial={{ opacity: 0, scale: 0.96, x: "-50%", y: 12 }}
+                    animate={{
+                      opacity: 1,
+                      scale: 1,
+                      x: "-50%",
+                      top: agentPhase === "answered" ? "calc(16% - 10px)" : "calc(16% + 140px)",
+                      y: "0%",
+                    }}
+                    exit={{ opacity: 0, scale: 0.96, x: "-50%", y: 12, transition: { duration: 0.25 } }}
+                    transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                    className={`absolute left-1/2 z-20 pointer-events-auto transition-[width,max-width] duration-500 ease-out ${
+                      agentPhase === "answered"
+                        ? "w-[calc(100%-48px)] sm:w-[calc(100%-64px)] md:w-[calc(100%-96px)] max-w-[1580px]"
+                        : "w-[calc(100%-48px)] sm:w-[calc(100%-80px)] md:w-[calc(100%-112px)] max-w-[1280px]"
+                    }`}
+                  >
+                    {guardrailMessage ? (
+                      <div
+                        className="w-full max-w-[880px] mx-auto rounded-2xl sm:rounded-3xl border border-white/10 p-6 sm:p-8 text-white"
+                        style={{
+                          background: "rgba(18, 18, 22, 0.55)",
+                          backdropFilter: "blur(24px) saturate(140%)",
+                          WebkitBackdropFilter: "blur(24px) saturate(140%)",
+                          boxShadow:
+                            "0 24px 50px -12px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.12)",
+                        }}
+                      >
+                        <div className="mb-3 flex items-center justify-between border-b border-white/10 pb-3">
+                          <span className="inline-flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-wider text-zinc-300">
+                            <span className="h-2 w-2 rounded-full bg-amber-400" />
+                            Controllore B2B · Risposta Agente
+                          </span>
+                          <span className="rounded-full border border-white/15 bg-white/[0.06] px-2.5 py-0.5 font-mono text-[10px] text-zinc-300">
+                            Ricerca non avviata
+                          </span>
+                        </div>
+                        <p className="text-sm sm:text-base leading-relaxed text-zinc-100 whitespace-pre-line">
+                          {guardrailMessage}
+                        </p>
+                        <p className="mt-4 font-mono text-[11px] text-zinc-400">
+                          Clicca su &ldquo;new question&rdquo; in alto per modificare la richiesta o specificare Categoria, Area Geografica e Dimensione.
+                        </p>
+                      </div>
+                    ) : (
+                      <AgentRankingRace
+                        category={searchedMacroCategory}
+                        topN={targetRankedCount}
+                        companies={raceCompanies}
+                        nonClassificate={nonClassificateCompanies}
+                        isSearching={
+                          agentPhase === "assemble" ||
+                          agentPhase === "think" ||
+                          agentPhase === "resolve"
+                        }
+                        showSlider={agentPhase === "answered"}
+                        onSliderChange={(pct) => setSliderBersaglioPct(pct)}
+                        onSelectCompany={handleSelectCompany}
+                      />
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               {/* Chat dell'agente: MorphOrb al centro/basso, senza barre laterali, con globo verde su Done */}
               <MorphOrb
                 ref={morphOrbRef}
                 onSubmit={handleAgentSubmit}
-                onPhaseChange={(p) => setAgentPhase(p)}
+                onPhaseChange={(p) => {
+                  setAgentPhase(p);
+                  if (p === "idle") {
+                    scoutAbortRef.current?.abort();
+                    scoutAbortRef.current = null;
+                    setGuardrailMessage(null);
+                    setNonClassificateCompanies(undefined);
+                    setHasSearchResults(false);
+                    setRaceCompanies([]);
+                    setSliderBersaglioPct(50);
+                  }
+                }}
               />
             </motion.div>
           </section>
@@ -1010,10 +1981,12 @@ export default function BrainUIPage() {
               <ol className="rv-stack" data-8b-items=":scope > li">
                 {orderedCompanies.map((company, index) => (
                   <RankingCard
-                    key={company.rank}
+                    key={company.name}
                     company={company}
                     index={index}
                     targetRankedCount={targetRankedCount}
+                    bersaglioPct={sliderBersaglioPct}
+                    triggerPct={100 - sliderBersaglioPct}
                   />
                 ))}
               </ol>
@@ -1029,376 +2002,26 @@ export default function BrainUIPage() {
                 <ul
                   className="cl-globe"
                   data-8b-items=":scope > li"
-                  aria-label="Some of the businesses whose books we keep"
+                  aria-label="Qualified B2B customers"
                 >
-                  <li
-                    className="cl-card"
-                    style={
-                      { "--lat": "74.6deg", "--lon": "0.0deg" } as React.CSSProperties
-                    }
-                  >
-                    <div className="cl-face m-surface">
-                      <span className="m-text-3">Hollis &amp; Daughter</span>
-                      <span className="m-text-3 cl-trade">Bakers</span>
-                    </div>
-                  </li>
-                  <li
-                    className="cl-card"
-                    style={
-                      { "--lat": "63.2deg", "--lon": "137.5deg" } as React.CSSProperties
-                    }
-                  >
-                    <div className="cl-face">
-                      <img
-                        className="m-photo"
-                        src="https://images.unsplash.com/photo-1591538519435-4578c3ba26d6?ixid=M3w0Mzc5fDB8MXxzZWFyY2h8MXx8YmFrZXJ5JTIwc3RvcmVmcm9udHxlbnwxfDJ8fHwxNzkxMzY1NzEwfDA&ixlib=rb-4.1.0&auto=format&fit=crop&w=130&q=60"
-                        alt="Pastries on the counter of a client bakery"
-                        width="1600"
-                        height="1491"
-                        loading="lazy"
-                      />
-                    </div>
-                  </li>
-                  <li
-                    className="cl-card"
-                    style={
-                      { "--lat": "55.2deg", "--lon": "275.0deg" } as React.CSSProperties
-                    }
-                  >
-                    <div className="cl-face m-surface">
-                      <span className="m-text-3">Marlow Cycles</span>
-                      <span className="m-text-3 cl-trade">Bike repairs</span>
-                    </div>
-                  </li>
-                  <li
-                    className="cl-card"
-                    style={
-                      { "--lat": "48.6deg", "--lon": "52.5deg" } as React.CSSProperties
-                    }
-                  >
-                    <div className="cl-face m-surface">
-                      <span className="m-text-3">Fern Street Flowers</span>
-                      <span className="m-text-3 cl-trade">Florist</span>
-                    </div>
-                  </li>
-                  <li
-                    className="cl-card"
-                    style={
-                      { "--lat": "42.7deg", "--lon": "190.0deg" } as React.CSSProperties
-                    }
-                  >
-                    <div className="cl-face">
-                      <img
-                        className="m-photo"
-                        src="https://images.unsplash.com/photo-1593702295094-aea22597af65?ixid=M3w0Mzc5fDB8MXxzZWFyY2h8MTN8fGJhcmJlciUyMHNob3B8ZW58MXwwfHx8MTc5MTM2NTcyM3ww&ixlib=rb-4.1.0&auto=format&fit=crop&w=130&q=60"
-                        alt="A barber at work in a client's shop"
-                        width="1600"
-                        height="1067"
-                        loading="lazy"
-                      />
-                    </div>
-                  </li>
-                  <li
-                    className="cl-card"
-                    style={
-                      { "--lat": "37.4deg", "--lon": "327.5deg" } as React.CSSProperties
-                    }
-                  >
-                    <div className="cl-face m-surface">
-                      <span className="m-text-3">Quayside Barbers</span>
-                      <span className="m-text-3 cl-trade">Barbers</span>
-                    </div>
-                  </li>
-                  <li
-                    className="cl-card"
-                    style={
-                      { "--lat": "32.4deg", "--lon": "105.0deg" } as React.CSSProperties
-                    }
-                  >
-                    <div className="cl-face m-surface">
-                      <span className="m-text-3">Kiln Lane Pottery</span>
-                      <span className="m-text-3 cl-trade">Ceramics studio</span>
-                    </div>
-                  </li>
-                  <li
-                    className="cl-card"
-                    style={
-                      { "--lat": "27.7deg", "--lon": "242.6deg" } as React.CSSProperties
-                    }
-                  >
-                    <div className="cl-face">
-                      <img
-                        className="m-photo"
-                        src="https://images.unsplash.com/photo-1673201229733-69d19c5c4a87?ixid=M3w0Mzc5fDB8MXxzZWFyY2h8NHx8dGFpbG9yJTIwd29ya3Nob3B8ZW58MXwwfHx8MTc5MTM2NTcyM3ww&ixlib=rb-4.1.0&auto=format&fit=crop&w=150&q=60"
-                        alt="A tailor sewing at her machine"
-                        width="1600"
-                        height="1067"
-                        loading="lazy"
-                      />
-                    </div>
-                  </li>
-                  <li
-                    className="cl-card"
-                    style={
-                      { "--lat": "23.1deg", "--lon": "20.1deg" } as React.CSSProperties
-                    }
-                  >
-                    <div className="cl-face m-surface">
-                      <span className="m-text-3">Albion Books</span>
-                      <span className="m-text-3 cl-trade">Bookshop</span>
-                    </div>
-                  </li>
-                  <li
-                    className="cl-card"
-                    style={
-                      { "--lat": "18.7deg", "--lon": "157.6deg" } as React.CSSProperties
-                    }
-                  >
-                    <div className="cl-face">
-                      <img
-                        className="m-photo"
-                        src="https://images.unsplash.com/photo-1779694540389-2e150caf6590?ixid=M3w0Mzc5fDB8MXxzZWFyY2h8NXx8ZmxvcmlzdCUyMHNob3B8ZW58MXwyfHx8MTc5MTM2NTcxMHww&ixlib=rb-4.1.0&auto=format&fit=crop&w=120&q=60"
-                        alt="Bouquets for sale at a florist's stall"
-                        width="1600"
-                        height="1600"
-                        loading="lazy"
-                      />
-                    </div>
-                  </li>
-                  <li
-                    className="cl-card"
-                    style={
-                      { "--lat": "14.5deg", "--lon": "295.1deg" } as React.CSSProperties
-                    }
-                  >
-                    <div className="cl-face m-surface">
-                      <span className="m-text-3">Second Shot</span>
-                      <span className="m-text-3 cl-trade">Coffee</span>
-                    </div>
-                  </li>
-                  <li
-                    className="cl-card"
-                    style={
-                      { "--lat": "10.3deg", "--lon": "72.6deg" } as React.CSSProperties
-                    }
-                  >
-                    <div className="cl-face m-surface">
-                      <span className="m-text-3">Redland Motors</span>
-                      <span className="m-text-3 cl-trade">Garage</span>
-                    </div>
-                  </li>
-                  <li
-                    className="cl-card"
-                    style={
-                      { "--lat": "6.2deg", "--lon": "210.1deg" } as React.CSSProperties
-                    }
-                  >
-                    <div className="cl-face">
-                      <img
-                        className="m-photo"
-                        src="https://images.unsplash.com/photo-1627881032258-599944eab8a1?ixid=M3w0Mzc5fDB8MXxzZWFyY2h8M3x8YmljeWNsZSUyMHJlcGFpciUyMHdvcmtzaG9wfGVufDF8Mnx8fDE3OTEzNjU3MTF8MA&ixlib=rb-4.1.0&auto=format&fit=crop&w=110&q=60"
-                        alt="A bicycle wheel in a repair workshop"
-                        width="1600"
-                        height="1734"
-                        loading="lazy"
-                      />
-                    </div>
-                  </li>
-                  <li
-                    className="cl-card"
-                    style={
-                      { "--lat": "2.0deg", "--lon": "347.6deg" } as React.CSSProperties
-                    }
-                  >
-                    <div className="cl-face m-surface">
-                      <span className="m-text-3">Pressed</span>
-                      <span className="m-text-3 cl-trade">Dry cleaning</span>
-                    </div>
-                  </li>
-                  <li
-                    className="cl-card"
-                    style={
-                      { "--lat": "-2.0deg", "--lon": "125.1deg" } as React.CSSProperties
-                    }
-                  >
-                    <div className="cl-face m-surface">
-                      <span className="m-text-3">Northfield Hardware</span>
-                      <span className="m-text-3 cl-trade">Hardware</span>
-                    </div>
-                  </li>
-                  <li
-                    className="cl-card"
-                    style={
-                      { "--lat": "-6.2deg", "--lon": "262.6deg" } as React.CSSProperties
-                    }
-                  >
-                    <div className="cl-face">
-                      <img
-                        className="m-photo"
-                        src="https://images.unsplash.com/photo-1760018861921-43af85ea6c4f?ixid=M3w0Mzc5fDB8MXxzZWFyY2h8NXx8cG90dGVyeSUyMHN0dWRpb3xlbnwxfDB8fHwxNzkxMzY1NzIzfDA&ixlib=rb-4.1.0&auto=format&fit=crop&w=170&q=60"
-                        alt="Hands shaping clay on a potter's wheel"
-                        width="1600"
-                        height="1067"
-                        loading="lazy"
-                      />
-                    </div>
-                  </li>
-                  <li
-                    className="cl-card"
-                    style={
-                      { "--lat": "-10.3deg", "--lon": "40.1deg" } as React.CSSProperties
-                    }
-                  >
-                    <div className="cl-face m-surface">
-                      <span className="m-text-3">Totterdown Physio</span>
-                      <span className="m-text-3 cl-trade">Physiotherapy</span>
-                    </div>
-                  </li>
-                  <li
-                    className="cl-card"
-                    style={
-                      { "--lat": "-14.5deg", "--lon": "177.6deg" } as React.CSSProperties
-                    }
-                  >
-                    <div className="cl-face m-surface">
-                      <span className="m-text-3">Cole &amp; Pike</span>
-                      <span className="m-text-3 cl-trade">Joinery</span>
-                    </div>
-                  </li>
-                  <li
-                    className="cl-card"
-                    style={
-                      { "--lat": "-18.7deg", "--lon": "315.1deg" } as React.CSSProperties
-                    }
-                  >
-                    <div className="cl-face">
-                      <img
-                        className="m-photo"
-                        src="https://images.unsplash.com/photo-1633420840567-d5c4cbdffe57?ixid=M3w0Mzc5fDB8MXxzZWFyY2h8NXx8Y29mZmVlJTIwc2hvcCUyMGNvdW50ZXJ8ZW58MXwwfHx8MTc5MTM2NTcyM3ww&ixlib=rb-4.1.0&auto=format&fit=crop&w=200&q=60"
-                        alt="A barista pouring milk into a cup"
-                        width="1600"
-                        height="1061"
-                        loading="lazy"
-                      />
-                    </div>
-                  </li>
-                  <li
-                    className="cl-card"
-                    style={
-                      { "--lat": "-23.1deg", "--lon": "92.7deg" } as React.CSSProperties
-                    }
-                  >
-                    <div className="cl-face m-surface">
-                      <span className="m-text-3">Harbour Yoga</span>
-                      <span className="m-text-3 cl-trade">Yoga studio</span>
-                    </div>
-                  </li>
-                  <li
-                    className="cl-card"
-                    style={
-                      { "--lat": "-27.7deg", "--lon": "230.2deg" } as React.CSSProperties
-                    }
-                  >
-                    <div className="cl-face m-surface">
-                      <span className="m-text-3">Little Wren</span>
-                      <span className="m-text-3 cl-trade">Nursery</span>
-                    </div>
-                  </li>
-                  <li
-                    className="cl-card"
-                    style={
-                      { "--lat": "-32.4deg", "--lon": "7.7deg" } as React.CSSProperties
-                    }
-                  >
-                    <div className="cl-face">
-                      <img
-                        className="m-photo"
-                        src="https://images.unsplash.com/photo-1630147351247-8d7b39d7e681?ixid=M3w0Mzc5fDB8MXxzZWFyY2h8NXx8Ym9va3Nob3AlMjBpbnRlcmlvcnxlbnwxfDB8fHwxNzkxMzY1NzIzfDA&ixlib=rb-4.1.0&auto=format&fit=crop&w=190&q=60"
-                        alt="Shelves of an independent bookshop"
-                        width="1600"
-                        height="1200"
-                        loading="lazy"
-                      />
-                    </div>
-                  </li>
-                  <li
-                    className="cl-card"
-                    style={
-                      { "--lat": "-37.4deg", "--lon": "145.2deg" } as React.CSSProperties
-                    }
-                  >
-                    <div className="cl-face m-surface">
-                      <span className="m-text-3">Halfpenny Deli</span>
-                      <span className="m-text-3 cl-trade">Delicatessen</span>
-                    </div>
-                  </li>
-                  <li
-                    className="cl-card"
-                    style={
-                      { "--lat": "-42.7deg", "--lon": "282.7deg" } as React.CSSProperties
-                    }
-                  >
-                    <div className="cl-face m-surface">
-                      <span className="m-text-3">Linden Opticians</span>
-                      <span className="m-text-3 cl-trade">Opticians</span>
-                    </div>
-                  </li>
-                  <li
-                    className="cl-card"
-                    style={
-                      { "--lat": "-48.6deg", "--lon": "60.2deg" } as React.CSSProperties
-                    }
-                  >
-                    <div className="cl-face">
-                      <img
-                        className="m-photo"
-                        src="https://images.unsplash.com/photo-1676018366904-c083ed678e60?ixid=M3w0Mzc5fDB8MXxzZWFyY2h8M3x8Y2FyJTIwbWVjaGFuaWMlMjBnYXJhZ2V8ZW58MXwwfHx8MTc5MTM2NTcyM3ww&ixlib=rb-4.1.0&auto=format&fit=crop&w=170&q=60"
-                        alt="A mechanic working in a small garage"
-                        width="1600"
-                        height="1067"
-                        loading="lazy"
-                      />
-                    </div>
-                  </li>
-                  <li
-                    className="cl-card"
-                    style={
-                      { "--lat": "-55.2deg", "--lon": "197.7deg" } as React.CSSProperties
-                    }
-                  >
-                    <div className="cl-face m-surface">
-                      <span className="m-text-3">Gable Roofing</span>
-                      <span className="m-text-3 cl-trade">Roofers</span>
-                    </div>
-                  </li>
-                  <li
-                    className="cl-card"
-                    style={
-                      { "--lat": "-63.2deg", "--lon": "335.2deg" } as React.CSSProperties
-                    }
-                  >
-                    <div className="cl-face">
-                      <img
-                        className="m-photo"
-                        src="https://images.unsplash.com/photo-1788905761561-d47d8df41edf?ixid=M3w0Mzc5fDB8MXxzZWFyY2h8OHx8c21hbGwlMjBzaG9wJTIwb3duZXIlMjBjb3VudGVyfGVufDF8Mnx8fDE3OTEzNjU3MTB8MA&ixlib=rb-4.1.0&auto=format&fit=crop&w=140&q=60"
-                        alt="A customer at the counter of a dry cleaner"
-                        width="1600"
-                        height="1600"
-                        loading="lazy"
-                      />
-                    </div>
-                  </li>
-                  <li
-                    className="cl-card"
-                    style={
-                      { "--lat": "-74.6deg", "--lon": "112.7deg" } as React.CSSProperties
-                    }
-                  >
-                    <div className="cl-face m-surface">
-                      <span className="m-text-3">Southville Vets</span>
-                      <span className="m-text-3 cl-trade">Vets</span>
-                    </div>
-                  </li>
+                  {globeTiles.map((tile, idx) => {
+                    const coord = GLOBE_CARD_COORDS[idx]!;
+                    const tileKey =
+                      tile.kind === "logo"
+                        ? `globe-card-${idx}-${tile.logoCandidates[0]}`
+                        : `globe-card-${idx}-${tile.title}`;
+                    return (
+                      <li
+                        key={tileKey}
+                        className="cl-card"
+                        style={
+                          { "--lat": coord.lat, "--lon": coord.lon } as React.CSSProperties
+                        }
+                      >
+                        <QualifiedGlobeTile tile={tile} />
+                      </li>
+                    );
+                  })}
                 </ul>
                 <p className="m-text-3 cl-note">
                   Thousands+ of potential clients. Here is a small sample.
@@ -1429,18 +2052,20 @@ export default function BrainUIPage() {
                 >
                   <div className="tm-glass-card group/glass">
                     <img
-                      src="/scenes/1.png"
+                      src="/scenes/1.png?v=2"
                       alt="1. Inserisci il prompt"
                       className="h-full w-full object-contain select-none pointer-events-none transition-all duration-500 ease-out drop-shadow-[0_10px_22px_rgba(0,0,0,0.06)] group-hover/glass:drop-shadow-[0_20px_36px_rgba(0,90,220,0.22)] group-hover/glass:brightness-[1.03]"
                     />
                   </div>
-                  <h3 className="m-text-4">1. Inserisci il prompt</h3>
-                  <p className="m-text">
-                    Inizia descrivendo liberamente la tua ricerca. Puoi definire
-                    settore, geografia, fatturato minimo o bisogni specifici:
-                    l&apos;agente comprende il contesto naturale e costruisce la
-                    strategia di scouting.
-                  </p>
+                  <div className="tm-card-info">
+                    <h3 className="m-text-4">1. Inserisci il prompt</h3>
+                    <p className="m-text">
+                      Inizia descrivendo liberamente la tua ricerca. Puoi definire
+                      settore, geografia, fatturato minimo o bisogni specifici:
+                      l&apos;agente comprende il contesto naturale e costruisce la
+                      strategia di scouting.
+                    </p>
+                  </div>
                 </li>
 
                 {/* 2. Parametri dimensionali */}
@@ -1450,18 +2075,20 @@ export default function BrainUIPage() {
                 >
                   <div className="tm-glass-card group/glass">
                     <img
-                      src="/scenes/2.png"
+                      src="/scenes/2.png?v=2"
                       alt="2. Parametri dimensionali"
                       className="h-full w-full object-contain select-none pointer-events-none transition-all duration-500 ease-out drop-shadow-[0_10px_22px_rgba(0,0,0,0.06)] group-hover/glass:drop-shadow-[0_20px_36px_rgba(0,90,220,0.22)] group-hover/glass:brightness-[1.03]"
                     />
                   </div>
-                  <h3 className="m-text-4">2. Parametri dimensionali</h3>
-                  <p className="m-text">
-                    In alternativa puoi indicare parametri precisi: dimensione
-                    aziendale (fatturato o dipendenti), area geografica e categoria
-                    per 5 aziende. Non è obbligatorio compilarli tutti nei campi,
-                    ma devono essere specificati nel prompt.
-                  </p>
+                  <div className="tm-card-info">
+                    <h3 className="m-text-4">2. Parametri dimensionali</h3>
+                    <p className="m-text">
+                      In alternativa puoi indicare parametri precisi: dimensione
+                      aziendale (fatturato o dipendenti), area geografica e categoria
+                      per 5 aziende. Non è obbligatorio compilarli tutti nei campi,
+                      ma devono essere specificati nel prompt.
+                    </p>
+                  </div>
                 </li>
 
                 {/* 3. Pensiero & Scoring */}
@@ -1471,18 +2098,20 @@ export default function BrainUIPage() {
                 >
                   <div className="tm-glass-card group/glass">
                     <img
-                      src="/scenes/3.png"
+                      src="/scenes/3.png?v=2"
                       alt="3. Pensiero & Scoring"
                       className="h-full w-full object-contain select-none pointer-events-none transition-all duration-500 ease-out drop-shadow-[0_10px_22px_rgba(0,0,0,0.06)] group-hover/glass:drop-shadow-[0_20px_36px_rgba(0,90,220,0.22)] group-hover/glass:brightness-[1.03]"
                     />
                   </div>
-                  <h3 className="m-text-4">3. Pensiero &amp; Scoring</h3>
-                  <p className="m-text">
-                    L&apos;agente specializzato passa alla fase di pensiero ed elabora
-                    i dati raccolti sul web. Esegue un&apos;analisi approfondita su
-                    ciascuna azienda candidata, assegnando un punteggio e ordinandole
-                    in classifica.
-                  </p>
+                  <div className="tm-card-info">
+                    <h3 className="m-text-4">3. Pensiero &amp; Scoring</h3>
+                    <p className="m-text">
+                      L&apos;agente specializzato passa alla fase di pensiero ed elabora
+                      i dati raccolti sul web. Esegue un&apos;analisi approfondita su
+                      ciascuna azienda candidata, assegnando un punteggio e ordinandole
+                      in classifica.
+                    </p>
+                  </div>
                 </li>
 
                 {/* 4. Bersaglio & Trigger (50/50) */}
@@ -1492,38 +2121,43 @@ export default function BrainUIPage() {
                 >
                   <div className="tm-glass-card group/glass">
                     <img
-                      src="/scenes/4.png"
+                      src="/scenes/4.png?v=2"
                       alt="4. Bersaglio & Trigger (50/50)"
                       className="h-full w-full object-contain select-none pointer-events-none transition-all duration-500 ease-out drop-shadow-[0_10px_22px_rgba(0,0,0,0.06)] group-hover/glass:drop-shadow-[0_20px_36px_rgba(0,90,220,0.22)] group-hover/glass:brightness-[1.03]"
                     />
                   </div>
-                  <h3 className="m-text-4">4. Bersaglio &amp; Trigger (50/50)</h3>
-                  <p className="m-text">
-                    Il voto finale combina due metriche personalizzabili via slider:
-                    Bersaglio (50%), aderenza ai requisiti richiesti, e Trigger
-                    (50%), che valuta la reale propensione all&apos;acquisto basandosi
-                    su notizie, assunzioni ed eventi recenti.
-                  </p>
+                  <div className="tm-card-info">
+                    <h3 className="m-text-4">4. Bersaglio &amp; Trigger (50/50)</h3>
+                    <p className="m-text">
+                      Il voto finale combina due metriche personalizzabili via slider:
+                      Bersaglio (50%), aderenza ai requisiti richiesti, e Trigger
+                      (50%), che valuta la reale propensione all&apos;acquisto basandosi
+                      su notizie, assunzioni ed eventi recenti.
+                    </p>
+                  </div>
                 </li>
 
-                {/* 5. Esporta e Archivia in Excel */}
+                {/* 5. Approfondisci, Vendi & Esporta */}
                 <li
                   className="tm-card"
                   style={{ "--team-tilt": "7deg" } as React.CSSProperties}
                 >
                   <div className="tm-glass-card group/glass">
                     <img
-                      src="/scenes/5.png"
-                      alt="5. Esporta e Archivia in Excel"
+                      src="/scenes/5.png?v=2"
+                      alt="5. Approfondisci & Esporta"
                       className="h-full w-full object-contain select-none pointer-events-none transition-all duration-500 ease-out drop-shadow-[0_10px_22px_rgba(0,0,0,0.06)] group-hover/glass:drop-shadow-[0_20px_36px_rgba(0,90,220,0.22)] group-hover/glass:brightness-[1.03]"
                     />
                   </div>
-                  <h3 className="m-text-4">5. Esporta e Archivia in Excel</h3>
-                  <p className="m-text">
-                    A fine sessione salvi comodamente tutti i dati elaborati in formato
-                    Excel con un clic. Scarica il foglio di calcolo completo con metriche,
-                    recapiti e motivazioni dello score per archiviarli nel tuo CRM.
-                  </p>
+                  <div className="tm-card-info">
+                    <h3 className="m-text-4">5. Approfondisci &amp; Esporta</h3>
+                    <p className="m-text">
+                      Accedi all&apos;analisi dettagliata di ogni azienda con tutti gli
+                      insight chiave: associamo ciascun prospect al servizio migliore
+                      da vendere e scriviamo la bozza email su misura per avviare il
+                      contatto. A fine sessione, esporti tutto in Excel con un clic.
+                    </p>
+                  </div>
                 </li>
               </ul>
             </section>

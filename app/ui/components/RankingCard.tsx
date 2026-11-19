@@ -34,14 +34,21 @@ export interface RankedCompanyItem {
   fullAddress?: string;
   phone?: string;
   website?: string;
+  logoUrl?: string | null;
+  pIva?: string;
   sources?: CompanySourceLink[];
   dossier?: CompanyDossier;
+  bersaglioScore?: number;
+  triggerScore?: number;
+  liveScore?: number;
 }
 
 interface RankingCardProps {
   company: RankedCompanyItem;
   index: number;
   targetRankedCount: number;
+  bersaglioPct?: number;
+  triggerPct?: number;
 }
 
 // Velocità animazioni per il fronte della scheda
@@ -51,6 +58,8 @@ export default function RankingCard({
   company,
   index,
   targetRankedCount,
+  bersaglioPct = 50,
+  triggerPct = 50,
 }: RankingCardProps) {
   const cardRef = useRef<HTMLLIElement>(null);
   const isInView = useInView(cardRef, { once: true, amount: 0.6 });
@@ -99,28 +108,43 @@ export default function RankingCard({
 
   const activePersona =
     dossier.buyerPersonas.find((p) => p.figureNumber === activePersonaTab) ||
-    dossier.buyerPersonas[0];
+    dossier.buyerPersonas[0]!;
+
+  const cardDomId = `company-card-${company.name.toLowerCase().replace(/[^a-z0-9]/g, "-")}`;
 
   return (
     <li
+      id={cardDomId}
       ref={cardRef}
-      className="rv-sheet"
+      className="rv-sheet scroll-mt-24"
       style={{ "--i": index } as React.CSSProperties}
     >
       <div className={`rv-flip-card ${isFlipped ? "is-flipped" : ""}`}>
         {/* ==================== FRONTE SCHEDA ==================== */}
         <div className={`rv-card-face rv-card-face--front ${surfaceClass}`}>
           <div className="rv-card-top">
-            <div className="rv-rank-block">
+            <div className="rv-rank-block flex items-baseline gap-2.5">
               <span
                 className={`m-text-2 rv-rank-number ${
-                  isOutOfRanking ? "is-out" : "is-in-rank"
+                  isOutOfRanking ? "text-zinc-400 font-medium" : "text-black font-bold"
                 }`}
               >
                 #{company.rank}
               </span>
+              {/* Badge Voto Dinamico aggiornato in tempo reale dallo slider */}
+              <span
+                className={`text-sm font-mono font-bold px-2.5 py-0.5 rounded ${
+                  isOutOfRanking
+                    ? "bg-zinc-200/80 text-zinc-600"
+                    : "bg-red-50 text-[#d12a1e] border border-red-200"
+                }`}
+              >
+                {(company.liveScore ?? dossier.scoringBreakdown.totalScore).toFixed(1)}
+              </span>
               {isOutOfRanking && (
-                <span className="m-text-3 rv-out-label">Fuori classifica</span>
+                <span className="text-[11px] font-mono text-zinc-400 lowercase tracking-wider">
+                  fuori classifica
+                </span>
               )}
             </div>
 
@@ -173,30 +197,37 @@ export default function RankingCard({
 
         {/* ==================== RETRO SCHEDA ==================== */}
         <div className={`rv-card-face rv-card-face--back ${surfaceClass}`}>
-          {/* Header superiore: Badge rank + Nome azienda + Scoring ultra-compatto + Torna alla scheda */}
+          {/* Header superiore: Badge rank + Nome azienda + Partita IVA + Scoring + Torna alla scheda */}
           <div className="rv-back-header">
-            <div className="rv-back-header-left">
+            <div className="rv-back-header-left flex items-baseline gap-2 flex-wrap">
               <span className="rv-back-badge">#{company.rank}</span>
               <h4 className="rv-back-company-name">{company.name}</h4>
+              <span className="text-[11px] font-mono text-zinc-600 font-normal">
+                P.IVA {company.pIva || "IT09384720159"}
+              </span>
             </div>
 
-            {/* Strip di Scoring compatta inserita nell'header (zero spazio sprecato) */}
+            {/* Strip di Scoring: Fit e Trigger con percentuali attive dello slider, Voto Finale Rosso */}
             <div className="rv-header-scoring-strip">
               <div className="rv-header-score-item">
-                <span className="rv-header-score-label">Fit</span>
+                <span className="rv-header-score-label">
+                  Fit <span className="text-[9px] text-zinc-400 font-normal">({bersaglioPct}%)</span>
+                </span>
                 <span className="rv-header-score-val">
-                  {dossier.scoringBreakdown.fitTargetScore.toFixed(1)}
+                  {(company.bersaglioScore ?? dossier.scoringBreakdown.fitTargetScore).toFixed(1)}
                 </span>
               </div>
 
               <div className="rv-header-score-item">
-                <span className="rv-header-score-label">Trigger</span>
+                <span className="rv-header-score-label">
+                  Trigger <span className="text-[9px] text-zinc-400 font-normal">({triggerPct}%)</span>
+                </span>
                 <span className="rv-header-score-val">
-                  {dossier.scoringBreakdown.potenzaTriggerScore.toFixed(1)}
+                  {(company.triggerScore ?? dossier.scoringBreakdown.potenzaTriggerScore).toFixed(1)}
                 </span>
               </div>
 
-              {/* Malus Persona incluso SOLTANTO se presente (> 0) */}
+              {/* Malus Persona se presente (> 0) */}
               {dossier.scoringBreakdown.malusPersona > 0 && (
                 <div className="rv-header-score-item rv-header-score-item--malus">
                   <span className="rv-header-score-label">Malus</span>
@@ -206,12 +237,13 @@ export default function RankingCard({
                 </div>
               )}
 
+              {/* Voto Finale Rosso Acceso: sincronizzato dinamicamente con lo slider */}
               <div className="rv-header-score-item rv-header-score-item--total">
                 <span className="rv-header-score-label">Score</span>
-                <span className="rv-header-score-val">
-                  {dossier.scoringBreakdown.totalScore.toFixed(1)}
+                <span className="rv-header-score-val text-[#d12a1e] font-extrabold">
+                  {(company.liveScore ?? dossier.scoringBreakdown.totalScore).toFixed(1)}
                 </span>
-                <span className="text-[9px] opacity-70">/10</span>
+                <span className="text-[9px] text-[#d12a1e]/70">/10</span>
               </div>
             </div>
 
@@ -256,7 +288,7 @@ export default function RankingCard({
                 <span className="rv-back-field__val">{company.cluster}</span>
               </div>
 
-              {/* 4. Sottosettore (subito sotto settore) */}
+              {/* 4. Sottosettore */}
               <div className="rv-back-field">
                 <span className="rv-back-field__label">Sottosettore</span>
                 <span className="rv-back-field__val text-[11px] leading-tight">
@@ -264,7 +296,7 @@ export default function RankingCard({
                 </span>
               </div>
 
-              {/* 5. Sede (Indirizzo preciso con icona allineata al titolo) */}
+              {/* 5. Sede */}
               <div className="rv-back-field">
                 <div className="rv-back-field__label-row">
                   <MapPin size={11} className="rv-back-field-icon" />
@@ -277,7 +309,7 @@ export default function RankingCard({
                 </span>
               </div>
 
-              {/* 6. Telefono (con icona allineata al titolo) */}
+              {/* 6. Telefono */}
               <div className="rv-back-field">
                 <div className="rv-back-field__label-row">
                   <Phone size={11} className="rv-back-field-icon" />
@@ -296,7 +328,7 @@ export default function RankingCard({
                 </a>
               </div>
 
-              {/* 7. Sito ufficiale (con icona allineata al titolo) */}
+              {/* 7. Sito ufficiale */}
               <div className="rv-back-field">
                 <div className="rv-back-field__label-row">
                   <Globe size={11} className="rv-back-field-icon" />
@@ -315,7 +347,7 @@ export default function RankingCard({
                 </a>
               </div>
 
-              {/* 8. Fonti (la voce più in basso) */}
+              {/* 8. Fonti */}
               <div className="rv-back-field rv-back-sources-box">
                 <button
                   type="button"
@@ -380,7 +412,7 @@ export default function RankingCard({
             {/* ----------------- COLONNA DESTRA (User-Friendly & Pulita) ----------------- */}
             <section className="rv-back-col-right">
               <div className="rv-back-right-scroll-container">
-                {/* 1. INFORMAZIONI CHIAVE SULL'AZIENDA (Trafiletto Unico senza divisori) */}
+                {/* 1. INFORMAZIONI CHIAVE SULL'AZIENDA */}
                 <div className="rv-back-card">
                   <h5 className="rv-back-card-title">
                     INFORMAZIONI CHIAVE SULL&apos;AZIENDA
@@ -392,20 +424,21 @@ export default function RankingCard({
                   </p>
                 </div>
 
-                {/* 2. DOPPIO MATCHING SERVIZI CXI PERTINENTI (Sezione Principale) */}
+                {/* 2. DOPPIO MATCHING SERVIZI CXI PERTINENTI */}
                 <div className="rv-back-card rv-back-card--cxi">
                   <div className="flex items-center justify-between pb-1.5 border-b border-[var(--color-8)]/50">
                     <h5 className="rv-back-card-title">
                       DOPPIO MATCHING SERVIZI CXI PERTINENTI
                     </h5>
-                    <span className="text-[10px] uppercase font-bold text-[var(--color-6)] tracking-wider">
-                      Opportunità Prioritaria
+                    {/* Scritta OPPORTUNITÀ PRIORITARIA in nero grassetto */}
+                    <span className="text-[10px] uppercase font-bold text-black tracking-wider">
+                      OPPORTUNITÀ PRIORITARIA
                     </span>
                   </div>
 
                   {/* Soluzione Principale */}
                   <div className="rv-cxi-item">
-                    <div className="rv-cxi-head-row">
+                    <div className="rv-cxi-head-row flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
                         <span className="rv-cxi-pill rv-cxi-pill--primary">
                           Soluzione Principale: {dossier.cxiPrimary.name}
@@ -417,41 +450,19 @@ export default function RankingCard({
                         )}
                       </div>
 
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          className="rv-action-btn rv-action-btn--email-toggle"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setIsEmailOpen(!isEmailOpen);
-                          }}
-                        >
-                          {isEmailOpen ? "Nascondi Bozza Email" : "Mostra Bozza Email"}
-                        </button>
-
-                        {isEmailOpen && (
-                          <button
-                            type="button"
-                            className="rv-action-btn rv-action-btn--primary"
-                            onClick={handleCopyEmail}
-                            title="Copia l'intero gancio mail"
-                          >
-                            {isCopied ? (
-                              <>
-                                <Check size={12} className="text-emerald-600" />
-                                <span className="text-emerald-700 font-semibold">
-                                  Copiato!
-                                </span>
-                              </>
-                            ) : (
-                              <>
-                                <Copy size={12} />
-                                <span>Copia Gancio Mail</span>
-                              </>
-                            )}
-                          </button>
-                        )}
-                      </div>
+                      {/* Tasto Mostra/Nascondi bozza mail: sfondo coordinato (grigio su m-surface-2, bianco su m-surface), testo nero, bordo rosso e larghezza fissa antiriflesso */}
+                      <button
+                        type="button"
+                        className={`inline-flex items-center justify-center w-[184px] shrink-0 h-[30px] px-3.5 rounded text-[12.5px] font-semibold text-black border border-[#d12a1e] transition-all duration-150 cursor-pointer hover:opacity-85 ${
+                          surfaceClass === "m-surface-2" ? "bg-[#eaeaea]" : "bg-white"
+                        }`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsEmailOpen(!isEmailOpen);
+                        }}
+                      >
+                        {isEmailOpen ? "Nascondi bozza mail" : "Mostra bozza mail"}
+                      </button>
                     </div>
 
                     <div className="rv-cxi-content">
@@ -465,7 +476,7 @@ export default function RankingCard({
                       </p>
                     </div>
 
-                    {/* Bozza Email Espandibile (nascosta di default) */}
+                    {/* Bozza Email Espandibile con tasto 'copia mail' bianco */}
                     <AnimatePresence>
                       {isEmailOpen && (
                         <motion.div
@@ -476,9 +487,34 @@ export default function RankingCard({
                           className="rv-email-drawer"
                         >
                           <div className="rv-email-box">
-                            <div className="rv-email-header">
-                              Bozza Email Personalizzata (COO)
+                            <div className="flex items-center justify-between pb-1 mb-1 border-b border-black/10">
+                              <span className="rv-email-header">
+                                Bozza Email Personalizzata ({activePersona.figureNumber === 1 ? "COO" : "CIO / CDO"})
+                              </span>
+
+                              {/* Tasto Copia Mail: spostato qui, rimane bianco quando attivato */}
+                              <button
+                                type="button"
+                                className="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-white text-black border border-black/20 hover:bg-zinc-100 transition-colors text-xs font-semibold shadow-xs cursor-pointer"
+                                onClick={handleCopyEmail}
+                                title="Copia l'intero testo dell'email"
+                              >
+                                {isCopied ? (
+                                  <>
+                                    <Check size={12} className="text-emerald-600" />
+                                    <span className="text-emerald-600 font-semibold">
+                                      Copiato!
+                                    </span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Copy size={12} className="text-black" />
+                                    <span>Copia mail</span>
+                                  </>
+                                )}
+                              </button>
                             </div>
+
                             <div className="rv-email-subject">
                               <strong>Oggetto: </strong>
                               {dossier.cxiPrimary.emailHook.subject}
@@ -513,49 +549,54 @@ export default function RankingCard({
                   </div>
                 </div>
 
-                {/* 3. INTERLOCUTORI & BUYER PERSONAS TARGET (Con selettore a Tab per massima chiarezza) */}
+                {/* 3. INTERLOCUTORI & BUYER PERSONAS TARGET */}
                 <div className="rv-back-card">
                   <div className="flex items-center justify-between pb-1.5 border-b border-[var(--color-8)]/50">
                     <h5 className="rv-back-card-title">
                       INTERLOCUTORI & 2 BUYER PERSONAS TARGET
                     </h5>
-                    {/* Selettore a Tab minimalista */}
-                    <div className="rv-persona-tabs">
-                      {dossier.buyerPersonas.map((persona) => (
-                        <button
-                          key={persona.figureNumber}
-                          type="button"
-                          className={`rv-persona-tab ${
-                            activePersonaTab === persona.figureNumber
-                              ? "is-active"
-                              : ""
-                          }`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setActivePersonaTab(persona.figureNumber);
-                          }}
-                        >
-                          Figura #{persona.figureNumber}: {persona.figureNumber === 1 ? "COO" : "CIO / CDO"}
-                        </button>
-                      ))}
+                    {/* Due tasti per scegliere la figura buyer: sfondo bianco, testo nero; attiva ha bordo rosso, inattiva bordo nero */}
+                    <div className="flex items-center gap-2">
+                      {dossier.buyerPersonas.map((persona) => {
+                        const isActive = activePersonaTab === persona.figureNumber;
+                        const roleLabel =
+                          persona.figureNumber === 1
+                            ? "Figura #1 (COO)"
+                            : "Figura #2 (CIO / CDO)";
+                        return (
+                          <button
+                            key={persona.figureNumber}
+                            type="button"
+                            className={`inline-flex items-center justify-center h-[30px] px-3.5 rounded text-[12.5px] transition-all duration-150 cursor-pointer bg-white text-black ${
+                              isActive
+                                ? "border-2 border-[#d12a1e] font-bold shadow-xs"
+                                : "border border-black/35 font-medium hover:border-black"
+                            }`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActivePersonaTab(persona.figureNumber);
+                            }}
+                          >
+                            {roleLabel}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
 
-                  {/* Scheda Interlocutore Attivo: ariosa, chiara, senza affollamento */}
+                  {/* Scheda Interlocutore Attivo: rimosso rettangolo Figura #1 / #2 di fianco al nome */}
                   <div className="rv-persona-view">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="rv-persona-tag">
-                          Figura #{activePersona.figureNumber}
-                        </span>
-                        <h6 className="rv-persona-role-title">
-                          {activePersona.role}
-                        </h6>
-                      </div>
-                      <span className="text-[11px] uppercase font-bold text-[var(--color-6)] tracking-wide">
+                      {/* Solo il nome del ruolo, senza rettangolo Figura #1/#2 */}
+                      <h6 className="rv-persona-role-title">
+                        {activePersona.role}
+                      </h6>
+
+                      {/* Scritta DECISORE ECONOMICO in nero grassetto */}
+                      <span className="text-[11px] uppercase font-bold text-black tracking-wide">
                         {activePersona.figureNumber === 1
-                          ? "Decisore Economico"
-                          : "Sponsor Strategico"}
+                          ? "DECISORE ECONOMICO"
+                          : "SPONSOR STRATEGICO"}
                       </span>
                     </div>
 

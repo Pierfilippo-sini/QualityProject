@@ -108,6 +108,7 @@ export function simulateCompanyHunterSearch(
       fullAddress: string;
       phone: string;
       website: string;
+      pIva?: string;
       sources: Array<{ title: string; url: string }>;
     }>
   > = {
@@ -122,6 +123,7 @@ export function simulateCompanyHunterSearch(
         fullAddress: "Via Filippo Turati 29, 20121 Milano (MI)",
         phone: "+39 02 3658 9100",
         website: "https://www.nexuracloud.it",
+        pIva: "IT08923410967",
         sources: [
           { title: "Registro Imprese — C.C.I.A.A. Milano Monza Brianza", url: "https://www.registroimprese.it" },
           { title: "ReportAziende — Bilancio depositato esercizio 2024", url: "https://www.reportaziende.it" },
@@ -138,6 +140,7 @@ export function simulateCompanyHunterSearch(
         fullAddress: "Corso Castelfidardo 30/A, 10128 Torino (TO)",
         phone: "+39 011 564 7890",
         website: "https://www.omniadata.it",
+        pIva: "IT11209380014",
         sources: [
           { title: "Registro Imprese — C.C.I.A.A. Torino", url: "https://www.registroimprese.it" },
           { title: "FatturatoItalia — Report dimensionale e dipendenti", url: "https://www.fatturatoitalia.it" },
@@ -154,6 +157,7 @@ export function simulateCompanyHunterSearch(
         fullAddress: "Via Laurentina 449, 00142 Roma (RM)",
         phone: "+39 06 5929 1100",
         website: "https://www.hyperionsec.it",
+        pIva: "IT14592031002",
         sources: [
           { title: "Registro Imprese — C.C.I.A.A. Roma", url: "https://www.registroimprese.it" },
           { title: "ReportAziende — Scheda economico-finanziaria", url: "https://www.reportaziende.it" },
@@ -170,6 +174,7 @@ export function simulateCompanyHunterSearch(
         fullAddress: "Via dell'Arcoveggio 49/5, 40129 Bologna (BO)",
         phone: "+39 051 418 2300",
         website: "https://www.kryptonweb.it",
+        pIva: "IT03829101208",
         sources: [
           { title: "Registro Imprese — C.C.I.A.A. Bologna", url: "https://www.registroimprese.it" },
           { title: "FatturatoItalia — Scheda sintetica camerale", url: "https://www.fatturatoitalia.it" },
@@ -186,6 +191,7 @@ export function simulateCompanyHunterSearch(
         fullAddress: "Via Tortona 31, 20144 Milano (MI)",
         phone: "+39 02 8739 4410",
         website: "https://www.synapseiot.it",
+        pIva: "IT10928370961",
         sources: [
           { title: "Registro Imprese — C.C.I.A.A. Milano", url: "https://www.registroimprese.it" },
           { title: "ReportAziende — Bilancio & Fatturato verificato", url: "https://www.reportaziende.it" },
@@ -204,6 +210,7 @@ export function simulateCompanyHunterSearch(
         fullAddress: "Corso Svizzera 185, 10149 Torino (TO)",
         phone: "+39 011 749 6100",
         website: "https://www.aeternaprecision.it",
+        pIva: "IT07829100012",
         sources: [
           { title: "Registro Imprese — C.C.I.A.A. Torino", url: "https://www.registroimprese.it" },
           { title: "ReportAziende — Bilancio depositato", url: "https://www.reportaziende.it" },
@@ -220,6 +227,7 @@ export function simulateCompanyHunterSearch(
         fullAddress: "Via Crotte 28, 25127 Brescia (BS)",
         phone: "+39 030 373 5500",
         website: "https://www.kronoautomazioni.it",
+        pIva: "IT03182900174",
         sources: [
           { title: "Registro Imprese — C.C.I.A.A. Brescia", url: "https://www.registroimprese.it" },
           { title: "FatturatoItalia — Dati camerali 2024", url: "https://www.fatturatoitalia.it" },
@@ -236,6 +244,7 @@ export function simulateCompanyHunterSearch(
         fullAddress: "Via Provinciale 42, 24022 Alzano Lombardo (BG)",
         phone: "+39 035 512 8800",
         website: "https://www.omvalseriana.it",
+        pIva: "IT02189400165",
         sources: [
           { title: "Registro Imprese — C.C.I.A.A. Bergamo", url: "https://www.registroimprese.it" },
           { title: "ReportAziende — Dati finanziari ufficiali", url: "https://www.reportaziende.it" },
@@ -252,6 +261,7 @@ export function simulateCompanyHunterSearch(
         fullAddress: "Via Emilia Est 1020, 41122 Modena (MO)",
         phone: "+39 059 284 7100",
         website: "https://www.vanguardtooling.it",
+        pIva: "IT02891000361",
         sources: [
           { title: "Registro Imprese — C.C.I.A.A. Modena", url: "https://www.registroimprese.it" },
           { title: "ReportAziende — Bilancio economico verificato", url: "https://www.reportaziende.it" },
@@ -268,6 +278,7 @@ export function simulateCompanyHunterSearch(
         fullAddress: "Lungobisagno Dalmazia 65, 16141 Genova (GE)",
         phone: "+39 010 835 1200",
         website: "https://www.deltaflange.it",
+        pIva: "IT01829300108",
         sources: [
           { title: "Registro Imprese — C.C.I.A.A. Genova", url: "https://www.registroimprese.it" },
           { title: "FatturatoItalia — Registro societario", url: "https://www.fatturatoitalia.it" },
@@ -300,6 +311,7 @@ export function simulateCompanyHunterSearch(
       fullAddress: template.fullAddress,
       phone: template.phone,
       website: template.website,
+      pIva: template.pIva,
       sources: template.sources,
     };
   });

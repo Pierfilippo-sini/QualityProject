@@ -247,6 +247,7 @@ export interface EnrichedCompanyDraft {
   mapsCoordinates?: { latitude: number; longitude: number } | null;
   mapsPhone?: string | null;
   mapsWebsiteUri?: string | null;
+  logoUrl?: string | null;
   atecoCodice: string | "N.D.";
   cluster_macro: ClusterMacro;
   sub_cluster_specifico: string;
@@ -430,6 +431,7 @@ export function mergeAndComputeFinalRanking(
       mapsCoordinates: draft.mapsCoordinates,
       mapsPhone: draft.mapsPhone,
       mapsWebsiteUri: draft.mapsWebsiteUri,
+      logoUrl: draft.logoUrl ?? null,
       atecoCodice: draft.atecoCodice,
       cluster_macro: draft.cluster_macro,
       sub_cluster_specifico: draft.sub_cluster_specifico,
