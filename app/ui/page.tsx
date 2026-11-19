@@ -5,10 +5,11 @@ import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
 import RotatingEarth from "./components/RotatingEarth";
 import IntroSequence from "./components/IntroSequence";
 import RankingCard, { type RankedCompanyItem } from "./components/RankingCard";
-import MorphOrb, { type MorphOrbRef } from "./components/MorphOrb";
+import MorphOrb, { type MorphOrbParams, type MorphOrbRef } from "./components/MorphOrb";
 import HeroShutterText from "./components/HeroShutterText";
 import TypingEffect from "./components/TypingEffect";
 import { GlassFilter } from "@/components/ui/liquid-glass-button";
+import { simulateCompanyHunterSearch } from "@/lib/company-hunter-simulator";
 import "./evenkeel.css";
 
 const INITIAL_RANKED_COMPANIES: RankedCompanyItem[] = [
@@ -19,6 +20,15 @@ const INITIAL_RANKED_COMPANIES: RankedCompanyItem[] = [
     employees: "8-15 stimati",
     cluster: "Logistica",
     subcategory: "Trasporto merci su strada",
+    headquartersCity: "Verona (VR)",
+    fullAddress: "Interporto Quadrante Europa, 37135 Verona (VR)",
+    phone: "+39 045 862 1000",
+    website: "https://www.nordiclogistics.it",
+    sources: [
+      { title: "Registro Imprese — C.C.I.A.A. Verona", url: "https://www.registroimprese.it" },
+      { title: "ReportAziende — Dati camerali 2024", url: "https://www.reportaziende.it" },
+      { title: "Google Maps — Hub logistico verificato", url: "https://maps.google.com" },
+    ],
   },
   {
     rank: 4,
@@ -27,6 +37,15 @@ const INITIAL_RANKED_COMPANIES: RankedCompanyItem[] = [
     employees: "N/A",
     cluster: "Packaging",
     subcategory: "Imballaggi in cartone",
+    headquartersCity: "Bologna (BO)",
+    fullAddress: "Via dell'Industria 14, 40012 Calderara di Reno (BO)",
+    phone: "+39 051 728 900",
+    website: "https://www.vanguardpack.it",
+    sources: [
+      { title: "Registro Imprese — C.C.I.A.A. Bologna", url: "https://www.registroimprese.it" },
+      { title: "FatturatoItalia — Scheda aziendale", url: "https://www.fatturatoitalia.it" },
+      { title: "Google Maps — Stabilimento verificato", url: "https://maps.google.com" },
+    ],
   },
   {
     rank: 3,
@@ -35,6 +54,15 @@ const INITIAL_RANKED_COMPANIES: RankedCompanyItem[] = [
     employees: 34,
     cluster: "Meccanica",
     subcategory: "Lavorazioni CNC",
+    headquartersCity: "Vicenza (VI)",
+    fullAddress: "Viale della Scienza 22, 36100 Vicenza (VI)",
+    phone: "+39 0444 964 120",
+    website: "https://www.officinerossi.it",
+    sources: [
+      { title: "Registro Imprese — C.C.I.A.A. Vicenza", url: "https://www.registroimprese.it" },
+      { title: "ReportAziende — Bilancio depositato", url: "https://www.reportaziende.it" },
+      { title: "Google Maps — Officina verificata", url: "https://maps.google.com" },
+    ],
   },
   {
     rank: 2,
@@ -43,6 +71,15 @@ const INITIAL_RANKED_COMPANIES: RankedCompanyItem[] = [
     employees: 68,
     cluster: "Automazione",
     subcategory: "Robotica industriale",
+    headquartersCity: "Brescia (BS)",
+    fullAddress: "Via Crotte 28, 25127 Brescia (BS)",
+    phone: "+39 030 373 5500",
+    website: "https://www.kronoautomazioni.it",
+    sources: [
+      { title: "Registro Imprese — C.C.I.A.A. Brescia", url: "https://www.registroimprese.it" },
+      { title: "FatturatoItalia — Dati 2024", url: "https://www.fatturatoitalia.it" },
+      { title: "Google Maps — Sede operativa verificata", url: "https://maps.google.com" },
+    ],
   },
   {
     rank: 1,
@@ -51,6 +88,15 @@ const INITIAL_RANKED_COMPANIES: RankedCompanyItem[] = [
     employees: 125,
     cluster: "Meccanica di precisione",
     subcategory: "Componenti aerospaziali",
+    headquartersCity: "Torino (TO)",
+    fullAddress: "Corso Svizzera 185, 10149 Torino (TO)",
+    phone: "+39 011 749 6100",
+    website: "https://www.aeternaprecision.it",
+    sources: [
+      { title: "Registro Imprese — C.C.I.A.A. Torino", url: "https://www.registroimprese.it" },
+      { title: "ReportAziende — Bilancio depositato", url: "https://www.reportaziende.it" },
+      { title: "Google Maps — Sede legale & operativa verificata", url: "https://maps.google.com" },
+    ],
   },
 ];
 
@@ -60,24 +106,51 @@ export default function BrainUIPage() {
   const [navHidden, setNavHidden] = useState(false);
   const [confirmExit, setConfirmExit] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  // Parametro variabile: numero di aziende richieste in classifica dall'utente (le aziende con rank > targetRankedCount sono "Fuori classifica")
-  const [targetRankedCount] = useState<number>(3);
-  const [companies] = useState<RankedCompanyItem[]>(INITIAL_RANKED_COMPANIES);
+  // Parametro variabile: numero di aziende richieste in classifica dall'utente (5 aziende come richiesto dal workflow)
+  const [targetRankedCount, setTargetRankedCount] = useState<number>(5);
+  const [companies, setCompanies] = useState<RankedCompanyItem[]>(INITIAL_RANKED_COMPANIES);
+  const [hasSearchResults, setHasSearchResults] = useState(false);
   const [companyHunterKey, setCompanyHunterKey] = useState(0);
   const morphOrbRef = React.useRef<MorphOrbRef>(null);
   const [agentPhase, setAgentPhase] = useState<string>("idle");
   const [isAgentScreenOpen, setIsAgentScreenOpen] = useState(false);
   const scrollRafRef = React.useRef<number | null>(null);
 
-  // Ordine dal peggiore al migliore in classifica (es. #5, #4 fuori classifica per prime -> poi #3, #2, #1)
+  // Ordine dal peggiore al migliore in classifica (es. #5, #4 -> poi #3, #2, #1)
   const orderedCompanies = useMemo(
     () => [...companies].sort((a, b) => b.rank - a.rank),
     [companies]
   );
 
-  const handleAgentSubmit = useCallback(async (query: string) => {
-    await new Promise((resolve) => setTimeout(resolve, 1400));
-    return "Target analizzato: " + query + ". Ho individuato 5 aziende conformi con fatturato verificato, cluster di settore e score di prioritario pronto per il tuo CRM.";
+  const handleAgentSubmit = useCallback(
+    async (query: string, params?: MorphOrbParams) => {
+      // Simulazione ricerca agentica locale (senza chiamate API esterne per ora)
+      await new Promise((resolve) => setTimeout(resolve, 1400));
+      const result = simulateCompanyHunterSearch(query, params);
+      setCompanies(result.companies);
+      setTargetRankedCount(5);
+      setHasSearchResults(true);
+
+      // Notifica aggiornamento misure scroll-driven (evenkeel)
+      if (typeof window !== "undefined") {
+        setTimeout(() => {
+          window.dispatchEvent(new Event("resize"));
+        }, 300);
+      }
+      return result.summary;
+    },
+    []
+  );
+
+  const handleRunDemo = useCallback(() => {
+    morphOrbRef.current?.startDemo(
+      "Cercami 5 aziende a Milano nel settore SaaS con fatturato 10M - 50M €",
+      {
+        dimensione: "10M - 50M €",
+        area: "Milano",
+        categoria: "SaaS & Digital Tech",
+      }
+    );
   }, []);
 
   const handleIntroFinish = useCallback(() => {
@@ -685,7 +758,7 @@ export default function BrainUIPage() {
                 {[
                   ["#hero", "Home page"],
                   ["#agent-screen", "AI Agent"],
-                  ["#reviews", "Ranking"],
+                  ...(hasSearchResults ? [["#reviews", "Ranking"]] : []),
                   ["#team", "How to use"],
                 ].map(([href, label]) => (
                   <li key={href}>
@@ -860,6 +933,19 @@ export default function BrainUIPage() {
                 <div className="absolute top-0 right-0 w-7 h-7 sm:w-8 sm:h-8 border-r-[1.5px] border-t-[1.5px] border-white/60 pointer-events-none" />
                 <div className="absolute bottom-0 left-0 w-7 h-7 sm:w-8 sm:h-8 border-l-[1.5px] border-b-[1.5px] border-white/60 pointer-events-none" />
                 <div className="absolute bottom-0 right-0 w-7 h-7 sm:w-8 sm:h-8 border-r-[1.5px] border-b-[1.5px] border-white/60 pointer-events-none" />
+
+                {/* Pulsante Demo per test simulazione */}
+                <div className="absolute top-4 right-6 sm:top-6 sm:right-8 z-40">
+                  <button
+                    type="button"
+                    onClick={handleRunDemo}
+                    title="Simula una ricerca standard di test"
+                    className="group relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 hover:border-emerald-500/40 text-xs font-mono text-zinc-300 hover:text-white backdrop-blur-md transition-all duration-200 shadow-sm cursor-pointer pointer-events-auto"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="font-medium tracking-wide">Demo</span>
+                  </button>
+                </div>
               </div>
 
               {/* In Cima: Scritta COMPANY HUNTER e bottone new question */}
@@ -878,6 +964,7 @@ export default function BrainUIPage() {
                           e.stopPropagation();
                           setAgentPhase("idle");
                           morphOrbRef.current?.reset();
+                          setHasSearchResults(false);
                         }}
                         className="group relative inline-flex flex-col items-center justify-center pt-1 pb-1 px-3 bg-transparent border-0 outline-none cursor-pointer pointer-events-auto"
                       >
@@ -911,8 +998,11 @@ export default function BrainUIPage() {
             animate={{ opacity: isIntroFinished ? 1 : 0 }}
             transition={siteRevealTransition}
           >
-            {/* Company Ranking Carousel (replaces Questions we hear every week) */}
-            <section id="reviews" className="rv" data-8b-section="reviews">
+            {/* Sezioni Risultati Dinamici: Company Ranking e Clienti Qualificati (visibili contestualmente dopo ricerca) */}
+            {hasSearchResults && (
+              <>
+                {/* Company Ranking Carousel (replaces Questions we hear every week) */}
+                <section id="reviews" className="rv" data-8b-section="reviews">
               <h2 className="m-text-2 rv-h">
                 <span className="l-a">Company</span>
                 <span className="l-b">ranking.</span>
@@ -1315,6 +1405,8 @@ export default function BrainUIPage() {
                 </p>
               </div>
             </section>
+          </>
+        )}
 
             {/* Team */}
             <section
@@ -1336,24 +1428,11 @@ export default function BrainUIPage() {
                   style={{ "--team-tilt": "-8deg" } as React.CSSProperties}
                 >
                   <div className="tm-glass-card group/glass">
-                    <div
-                      aria-hidden="true"
-                      className="pointer-events-none absolute inset-0 z-0 rounded-2xl bg-white/[0.04] shadow-[0_0_8px_rgba(0,0,0,0.03),0_2px_6px_rgba(0,0,0,0.08),inset_3px_3px_0.5px_-3.5px_rgba(255,255,255,0.09),inset_-3px_-3px_0.5px_-3.5px_rgba(255,255,255,0.85),inset_1px_1px_1px_-0.5px_rgba(255,255,255,0.6),inset_-1px_-1px_1px_-0.5px_rgba(255,255,255,0.6),inset_0_0_6px_6px_rgba(255,255,255,0.12),inset_0_0_2px_2px_rgba(255,255,255,0.06),0_0_12px_rgba(0,0,0,0.15)] transition-[background-color,box-shadow] duration-300 group-hover/glass:bg-white/[0.08]"
+                    <img
+                      src="/scenes/1.png"
+                      alt="1. Inserisci il prompt"
+                      className="h-full w-full object-contain select-none pointer-events-none transition-all duration-500 ease-out drop-shadow-[0_10px_22px_rgba(0,0,0,0.06)] group-hover/glass:drop-shadow-[0_20px_36px_rgba(0,90,220,0.22)] group-hover/glass:brightness-[1.03]"
                     />
-                    <div
-                      aria-hidden="true"
-                      className="pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-2xl backdrop-blur-[12px] backdrop-saturate-150"
-                    />
-                    <div
-                      aria-hidden="true"
-                      className="pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-2xl"
-                      style={{ backdropFilter: 'url("#container-glass")' }}
-                    />
-                    <div className="relative z-10 flex h-full w-full flex-col items-center justify-center p-6 text-center select-none">
-                      <span className="text-3xl font-light tracking-widest text-neutral-400/80 font-mono">
-                        01
-                      </span>
-                    </div>
                   </div>
                   <h3 className="m-text-4">1. Inserisci il prompt</h3>
                   <p className="m-text">
@@ -1370,24 +1449,11 @@ export default function BrainUIPage() {
                   style={{ "--team-tilt": "-4deg" } as React.CSSProperties}
                 >
                   <div className="tm-glass-card group/glass">
-                    <div
-                      aria-hidden="true"
-                      className="pointer-events-none absolute inset-0 z-0 rounded-2xl bg-white/[0.04] shadow-[0_0_8px_rgba(0,0,0,0.03),0_2px_6px_rgba(0,0,0,0.08),inset_3px_3px_0.5px_-3.5px_rgba(255,255,255,0.09),inset_-3px_-3px_0.5px_-3.5px_rgba(255,255,255,0.85),inset_1px_1px_1px_-0.5px_rgba(255,255,255,0.6),inset_-1px_-1px_1px_-0.5px_rgba(255,255,255,0.6),inset_0_0_6px_6px_rgba(255,255,255,0.12),inset_0_0_2px_2px_rgba(255,255,255,0.06),0_0_12px_rgba(0,0,0,0.15)] transition-[background-color,box-shadow] duration-300 group-hover/glass:bg-white/[0.08]"
+                    <img
+                      src="/scenes/2.png"
+                      alt="2. Parametri dimensionali"
+                      className="h-full w-full object-contain select-none pointer-events-none transition-all duration-500 ease-out drop-shadow-[0_10px_22px_rgba(0,0,0,0.06)] group-hover/glass:drop-shadow-[0_20px_36px_rgba(0,90,220,0.22)] group-hover/glass:brightness-[1.03]"
                     />
-                    <div
-                      aria-hidden="true"
-                      className="pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-2xl backdrop-blur-[12px] backdrop-saturate-150"
-                    />
-                    <div
-                      aria-hidden="true"
-                      className="pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-2xl"
-                      style={{ backdropFilter: 'url("#container-glass")' }}
-                    />
-                    <div className="relative z-10 flex h-full w-full flex-col items-center justify-center p-6 text-center select-none">
-                      <span className="text-3xl font-light tracking-widest text-neutral-400/80 font-mono">
-                        02
-                      </span>
-                    </div>
                   </div>
                   <h3 className="m-text-4">2. Parametri dimensionali</h3>
                   <p className="m-text">
@@ -1404,24 +1470,11 @@ export default function BrainUIPage() {
                   style={{ "--team-tilt": "2deg" } as React.CSSProperties}
                 >
                   <div className="tm-glass-card group/glass">
-                    <div
-                      aria-hidden="true"
-                      className="pointer-events-none absolute inset-0 z-0 rounded-2xl bg-white/[0.04] shadow-[0_0_8px_rgba(0,0,0,0.03),0_2px_6px_rgba(0,0,0,0.08),inset_3px_3px_0.5px_-3.5px_rgba(255,255,255,0.09),inset_-3px_-3px_0.5px_-3.5px_rgba(255,255,255,0.85),inset_1px_1px_1px_-0.5px_rgba(255,255,255,0.6),inset_-1px_-1px_1px_-0.5px_rgba(255,255,255,0.6),inset_0_0_6px_6px_rgba(255,255,255,0.12),inset_0_0_2px_2px_rgba(255,255,255,0.06),0_0_12px_rgba(0,0,0,0.15)] transition-[background-color,box-shadow] duration-300 group-hover/glass:bg-white/[0.08]"
+                    <img
+                      src="/scenes/3.png"
+                      alt="3. Pensiero & Scoring"
+                      className="h-full w-full object-contain select-none pointer-events-none transition-all duration-500 ease-out drop-shadow-[0_10px_22px_rgba(0,0,0,0.06)] group-hover/glass:drop-shadow-[0_20px_36px_rgba(0,90,220,0.22)] group-hover/glass:brightness-[1.03]"
                     />
-                    <div
-                      aria-hidden="true"
-                      className="pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-2xl backdrop-blur-[12px] backdrop-saturate-150"
-                    />
-                    <div
-                      aria-hidden="true"
-                      className="pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-2xl"
-                      style={{ backdropFilter: 'url("#container-glass")' }}
-                    />
-                    <div className="relative z-10 flex h-full w-full flex-col items-center justify-center p-6 text-center select-none">
-                      <span className="text-3xl font-light tracking-widest text-neutral-400/80 font-mono">
-                        03
-                      </span>
-                    </div>
                   </div>
                   <h3 className="m-text-4">3. Pensiero &amp; Scoring</h3>
                   <p className="m-text">
@@ -1438,24 +1491,11 @@ export default function BrainUIPage() {
                   style={{ "--team-tilt": "-3deg" } as React.CSSProperties}
                 >
                   <div className="tm-glass-card group/glass">
-                    <div
-                      aria-hidden="true"
-                      className="pointer-events-none absolute inset-0 z-0 rounded-2xl bg-white/[0.04] shadow-[0_0_8px_rgba(0,0,0,0.03),0_2px_6px_rgba(0,0,0,0.08),inset_3px_3px_0.5px_-3.5px_rgba(255,255,255,0.09),inset_-3px_-3px_0.5px_-3.5px_rgba(255,255,255,0.85),inset_1px_1px_1px_-0.5px_rgba(255,255,255,0.6),inset_-1px_-1px_1px_-0.5px_rgba(255,255,255,0.6),inset_0_0_6px_6px_rgba(255,255,255,0.12),inset_0_0_2px_2px_rgba(255,255,255,0.06),0_0_12px_rgba(0,0,0,0.15)] transition-[background-color,box-shadow] duration-300 group-hover/glass:bg-white/[0.08]"
+                    <img
+                      src="/scenes/4.png"
+                      alt="4. Bersaglio & Trigger (50/50)"
+                      className="h-full w-full object-contain select-none pointer-events-none transition-all duration-500 ease-out drop-shadow-[0_10px_22px_rgba(0,0,0,0.06)] group-hover/glass:drop-shadow-[0_20px_36px_rgba(0,90,220,0.22)] group-hover/glass:brightness-[1.03]"
                     />
-                    <div
-                      aria-hidden="true"
-                      className="pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-2xl backdrop-blur-[12px] backdrop-saturate-150"
-                    />
-                    <div
-                      aria-hidden="true"
-                      className="pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-2xl"
-                      style={{ backdropFilter: 'url("#container-glass")' }}
-                    />
-                    <div className="relative z-10 flex h-full w-full flex-col items-center justify-center p-6 text-center select-none">
-                      <span className="text-3xl font-light tracking-widest text-neutral-400/80 font-mono">
-                        04
-                      </span>
-                    </div>
                   </div>
                   <h3 className="m-text-4">4. Bersaglio &amp; Trigger (50/50)</h3>
                   <p className="m-text">
@@ -1472,24 +1512,11 @@ export default function BrainUIPage() {
                   style={{ "--team-tilt": "7deg" } as React.CSSProperties}
                 >
                   <div className="tm-glass-card group/glass">
-                    <div
-                      aria-hidden="true"
-                      className="pointer-events-none absolute inset-0 z-0 rounded-2xl bg-white/[0.04] shadow-[0_0_8px_rgba(0,0,0,0.03),0_2px_6px_rgba(0,0,0,0.08),inset_3px_3px_0.5px_-3.5px_rgba(255,255,255,0.09),inset_-3px_-3px_0.5px_-3.5px_rgba(255,255,255,0.85),inset_1px_1px_1px_-0.5px_rgba(255,255,255,0.6),inset_-1px_-1px_1px_-0.5px_rgba(255,255,255,0.6),inset_0_0_6px_6px_rgba(255,255,255,0.12),inset_0_0_2px_2px_rgba(255,255,255,0.06),0_0_12px_rgba(0,0,0,0.15)] transition-[background-color,box-shadow] duration-300 group-hover/glass:bg-white/[0.08]"
+                    <img
+                      src="/scenes/5.png"
+                      alt="5. Esporta e Archivia in Excel"
+                      className="h-full w-full object-contain select-none pointer-events-none transition-all duration-500 ease-out drop-shadow-[0_10px_22px_rgba(0,0,0,0.06)] group-hover/glass:drop-shadow-[0_20px_36px_rgba(0,90,220,0.22)] group-hover/glass:brightness-[1.03]"
                     />
-                    <div
-                      aria-hidden="true"
-                      className="pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-2xl backdrop-blur-[12px] backdrop-saturate-150"
-                    />
-                    <div
-                      aria-hidden="true"
-                      className="pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-2xl"
-                      style={{ backdropFilter: 'url("#container-glass")' }}
-                    />
-                    <div className="relative z-10 flex h-full w-full flex-col items-center justify-center p-6 text-center select-none">
-                      <span className="text-3xl font-light tracking-widest text-neutral-400/80 font-mono">
-                        05
-                      </span>
-                    </div>
                   </div>
                   <h3 className="m-text-4">5. Esporta e Archivia in Excel</h3>
                   <p className="m-text">
